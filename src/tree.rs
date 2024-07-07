@@ -18,16 +18,16 @@ impl<T> Tree<T> {
         Tree { value, children }
     }
 
-    pub fn zip<B>(&self, other: &Tree<B>) -> Tree<(T, B)>
+    pub fn zip<B>(self, other: Tree<B>) -> Tree<(T, B)>
     where
         T: Clone,
         B: Clone,
     {
-        let new_value = (self.value.clone(), other.value.clone());
+        let new_value = (self.value, other.value);
         let new_children = self
             .children
-            .iter()
-            .zip(other.children.iter())
+            .into_iter()
+            .zip(other.children.into_iter())
             .map(|(child1, child2)| child1.zip(child2))
             .collect();
 
@@ -57,13 +57,17 @@ impl<T> Hkt1 for Tree<T> {
 }
 
 impl<T> Functor for Tree<T> {
-    fn fmap<B, F>(&self, f: &F) -> Tree<B>
+    fn fmap<B, F>(self, f: &F) -> Tree<B>
     where
         F: for<'a> Fn(&'a T) -> B,
     {
         Tree {
             value: f(&self.value),
-            children: self.children.iter().map(|child| child.fmap(f)).collect(),
+            children: self
+                .children
+                .into_iter()
+                .map(|child| child.fmap(f))
+                .collect(),
         }
     }
 }
@@ -155,7 +159,7 @@ mod tests {
             ],
         };
 
-        let zipped = tree1.zip(&tree2);
+        let zipped = tree1.zip(tree2);
 
         assert_eq!(
             zipped,

@@ -1,13 +1,13 @@
 use crate::{hkt::Hkt1, impl_hkt1};
 
 pub trait Functor: Hkt1 {
-    fn fmap<B, F>(&self, f: &F) -> Self::Of<B>
+    fn fmap<B, F>(self, f: &F) -> Self::Of<B>
     where
         F: for<'a> Fn(&'a Self::HktOf1) -> B;
 }
 
 pub trait FunctorMut: Functor {
-    fn fmap_mut<B, F>(&mut self, f: &mut F) -> Self::Of<B>
+    fn fmap_mut<B, F>(self, f: &mut F) -> Self::Of<B>
     where
         F: for<'a> FnMut(&mut Self::HktOf1) -> B;
 }
@@ -21,7 +21,7 @@ pub trait FunctorOnce: FunctorMut {
 impl_hkt1!(Option);
 
 impl<T> Functor for Option<T> {
-    fn fmap<B, F>(&self, f: &F) -> Self::Of<B>
+    fn fmap<B, F>(self, f: &F) -> Self::Of<B>
     where
         F: for<'a> Fn(&'a T) -> B,
     {
@@ -33,12 +33,12 @@ impl<T> Functor for Option<T> {
 }
 
 impl<T> FunctorMut for Option<T> {
-    fn fmap_mut<B, F>(&mut self, f: &mut F) -> Self::Of<B>
+    fn fmap_mut<B, F>(self, f: &mut F) -> Self::Of<B>
     where
         F: for<'a> FnMut(&mut T) -> B,
     {
         match self {
-            Some(ref mut x) => Some(f(x)),
+            Some(mut x) => Some(f(&mut x)),
             None => None,
         }
     }
@@ -102,7 +102,7 @@ mod tests {
 
     #[test]
     fn test_option_functor_mut() {
-        let mut x = Some(1);
+        let x = Some(1);
         let mut f = |x: &mut i32| {
             *x += 1;
             *x

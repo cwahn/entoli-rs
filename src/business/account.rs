@@ -282,7 +282,7 @@ impl AccountLedger {
     }
 
     pub fn carry_forward(
-        mut self,
+        self,
         ending_date: NaiveDate,
         beginning_date: NaiveDate,
     ) -> (AccountLedger, AccountLedger) {
