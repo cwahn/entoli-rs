@@ -1,5 +1,5 @@
 use crate::business::account::Account;
-use chrono::{DateTime, Local};
+use chrono::NaiveDate;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub enum TransactionType {
@@ -57,7 +57,7 @@ pub struct Transaction {
     debit_account: Account,
     credit_account: Account,
     amount: i64,
-    date: DateTime<Local>,
+    date: NaiveDate,
 }
 
 #[cfg(test)]
