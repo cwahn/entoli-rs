@@ -1,4 +1,7 @@
+use crate::functor::Functor;
 use chrono::{offset, NaiveDate};
+
+use crate::tree::Tree;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum Account {
@@ -195,7 +198,7 @@ pub fn ancestor_accounts(account: Account) -> Vec<Account> {
     path
 }
 
-pub fn is_ancestor_account(account: Account, ref_account: Account) -> bool {
+pub fn is_ances_account(account: Account, ref_account: Account) -> bool {
     let root = Account::AccountBase; // Assuming AccountBase is the root
 
     fn _is_ancestor_account(account: Account, ref_account: Account) -> bool {
@@ -323,6 +326,79 @@ impl AccountLedger {
     }
 }
 
+type LedgerTree = Tree<AccountLedger>;
+
+impl LedgerTree {
+    pub fn new(account: Account) -> LedgerTree {
+        Tree::unfold(
+            &|acc| {
+                (
+                    AccountLedger {
+                        account: *acc,
+                        debits: vec![],
+                        credits: vec![],
+                    },
+                    sub_accounts(*acc),
+                )
+            },
+            &account,
+        )
+    }
+
+    pub fn map_ledger<F>(self, account: Account, f: F) -> LedgerTree
+    where
+        F: Fn(AccountLedger) -> AccountLedger,
+    {
+        self.fmap(&|ledger| {
+            if ledger.account == account {
+                f(ledger)
+            } else {
+                ledger
+            }
+        })
+    }
+
+    pub fn map_desc_ledgers<F>(self, account: Account, f: F) -> LedgerTree
+    where
+        F: Fn(AccountLedger) -> AccountLedger,
+    {
+        self.fmap(&|x| {
+            if is_desc_account(x.account, account) {
+                f(x)
+            } else {
+                x
+            }
+        })
+    }
+
+    pub fn map_ances_ledgers<F>(self, account: Account, f: F) -> LedgerTree
+    where
+        F: Fn(AccountLedger) -> AccountLedger,
+    {
+        self.fmap(&|x| {
+            if is_desc_account(account, x.account) {
+                f(x)
+            } else {
+                x
+            }
+        })
+    }
+
+    pub fn find_ledger(&self, account: Account) -> Option<&AccountLedger> {
+        if self.value.account == account {
+            Some(&self.value)
+        } else {
+            for child in &self.children {
+                if let Some(ledger) = child.find_ledger(account) {
+                    return Some(ledger);
+                }
+            }
+
+            None
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -385,7 +461,7 @@ mod tests {
     fn test_is_ancestor_account() {
         let account = Account::TaxExpense;
         let ref_account = Account::Account;
-        assert_eq!(is_ancestor_account(account, ref_account), true);
+        assert_eq!(is_ances_account(account, ref_account), true);
     }
 
     #[test]

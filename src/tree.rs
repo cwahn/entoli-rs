@@ -59,10 +59,10 @@ impl<T> Hkt1 for Tree<T> {
 impl<T> Functor for Tree<T> {
     fn fmap<B, F>(self, f: &F) -> Tree<B>
     where
-        F: for<'a> Fn(&'a T) -> B,
+        F: Fn(T) -> B,
     {
         Tree {
-            value: f(&self.value),
+            value: f(self.value),
             children: self
                 .children
                 .into_iter()
@@ -219,7 +219,7 @@ mod tests {
             ],
         };
 
-        let f = |n: &i32| n.to_string();
+        let f = |n: i32| n.to_string();
 
         let mapped = tree1.fmap(&f);
 
