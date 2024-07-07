@@ -326,7 +326,7 @@ impl AccountLedger {
     }
 }
 
-type LedgerTree = Tree<AccountLedger>;
+pub type LedgerTree = Tree<AccountLedger>;
 
 impl LedgerTree {
     pub fn new(account: Account) -> LedgerTree {

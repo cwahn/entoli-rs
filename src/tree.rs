@@ -37,14 +37,59 @@ impl<T> Tree<T> {
         }
     }
 
-    pub fn flatten(&self) -> Vec<&T> {
-        let mut result = vec![&self.value];
+    pub fn iter(&self) -> TreeIter<T> {
+        TreeIter { stack: vec![self] }
+    }
 
-        for child in &self.children {
-            result.extend(child.flatten());
-        }
+    // pub fn flatten(&self) -> Vec<&T> {
+    //     let mut result = vec![&self.value];
 
-        result
+    //     for child in &self.children {
+    //         result.extend(child.flatten());
+    //     }
+
+    //     result
+    // }
+}
+
+pub struct TreeIter<'a, T> {
+    stack: Vec<&'a Tree<T>>,
+}
+
+impl<'a, T> Iterator for TreeIter<'a, T> {
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let node = self.stack.pop()?;
+
+        self.stack.extend(node.children.iter().rev());
+
+        Some(&node.value)
+    }
+}
+
+pub struct TreeIntoIter<T> {
+    stack: Vec<Tree<T>>,
+}
+
+impl<T> Iterator for TreeIntoIter<T> {
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let node = self.stack.pop()?;
+
+        self.stack.extend(node.children.into_iter().rev());
+
+        Some(node.value)
+    }
+}
+
+impl<T> IntoIterator for Tree<T> {
+    type Item = T;
+    type IntoIter = TreeIntoIter<T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        TreeIntoIter { stack: vec![self] }
     }
 }
 
@@ -254,15 +299,15 @@ mod tests {
     }
 
     #[test]
-    fn test_flatten_0() {
+    fn test_into_iter_0() {
         let tree = Tree {
             value: 1,
             children: vec![],
         };
 
-        let flattened = tree.flatten();
+        let flattened = tree.into_iter();
 
-        assert_eq!(flattened, vec![&1]);
+        assert_eq!(flattened.collect::<Vec<_>>(), vec![1]);
     }
 
     #[test]
@@ -293,8 +338,8 @@ mod tests {
             ],
         };
 
-        let flattened = tree.flatten();
+        let flattened: Vec<i32> = tree.into_iter().collect();
 
-        assert_eq!(flattened, vec![&1, &11, &111, &12, &121, &122]);
+        assert_eq!(flattened, vec![1, 11, 111, 12, 121, 122]);
     }
 }

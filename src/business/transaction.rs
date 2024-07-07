@@ -53,11 +53,11 @@ pub fn sub_transactions(transaction: &TransactionType) -> Vec<TransactionType> {
 }
 
 pub struct Transaction {
-    tt: TransactionType,
-    debit_account: Account,
-    credit_account: Account,
-    amount: i64,
-    date: NaiveDate,
+    pub trans_type: TransactionType,
+    pub debit_account: Account,
+    pub credit_account: Account,
+    pub amount: i64,
+    pub date: NaiveDate,
 }
 
 #[cfg(test)]
