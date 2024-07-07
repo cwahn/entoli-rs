@@ -236,20 +236,22 @@ impl AccountLedger {
         }
     }
 
-    pub fn add_debit(&mut self, offset_accout: Account, amount: i64, date: NaiveDate) {
+    pub fn debit_added(mut self, offset_accout: Account, amount: i64, date: NaiveDate) -> Self {
         self.debits.push(AccountEntry {
             offset_accout,
             amount,
             date,
         });
+        self
     }
 
-    pub fn add_credit(&mut self, offset_accout: Account, amount: i64, date: NaiveDate) {
+    pub fn credit_added(mut self, offset_accout: Account, amount: i64, date: NaiveDate) -> Self {
         self.credits.push(AccountEntry {
             offset_accout,
             amount,
             date,
         });
+        self
     }
 
     pub fn debit_amount(&self) -> i64 {
@@ -280,43 +282,43 @@ impl AccountLedger {
     }
 
     pub fn carry_forward(
-        &mut self,
+        mut self,
         ending_date: NaiveDate,
         beginning_date: NaiveDate,
-    ) -> AccountLedger {
-        let mut ledger = AccountLedger::new(self.account.clone());
+    ) -> (AccountLedger, AccountLedger) {
+        let ledger = AccountLedger::new(self.account.clone());
 
         let debit_amount = self.debit_amount();
         let credit_amount = self.credit_amount();
 
         if debit_amount > credit_amount {
-            self.add_credit(
-                Account::EndingBalance,
-                debit_amount - credit_amount,
-                ending_date,
-            );
-            ledger.add_debit(
-                Account::BeginningBalance,
-                debit_amount - credit_amount,
-                beginning_date,
-            );
-
-            ledger
+            (
+                self.credit_added(
+                    Account::EndingBalance,
+                    debit_amount - credit_amount,
+                    ending_date,
+                ),
+                ledger.debit_added(
+                    Account::BeginningBalance,
+                    debit_amount - credit_amount,
+                    beginning_date,
+                ),
+            )
         } else if credit_amount > debit_amount {
-            self.add_debit(
-                Account::EndingBalance,
-                credit_amount - debit_amount,
-                ending_date,
-            );
-            ledger.add_credit(
-                Account::BeginningBalance,
-                credit_amount - debit_amount,
-                beginning_date,
-            );
-
-            ledger
+            (
+                self.debit_added(
+                    Account::EndingBalance,
+                    credit_amount - debit_amount,
+                    ending_date,
+                ),
+                ledger.credit_added(
+                    Account::BeginningBalance,
+                    credit_amount - debit_amount,
+                    beginning_date,
+                ),
+            )
         } else {
-            ledger
+            (self, ledger)
         }
     }
 }
@@ -388,17 +390,17 @@ mod tests {
 
     #[test]
     fn test_account_ledger() {
-        let mut ledger = AccountLedger::new(Account::Cash);
-        ledger.add_debit(
-            Account::BeginningBalance,
-            100,
-            NaiveDate::from_ymd_opt(2020, 1, 1).unwrap(),
-        );
-        ledger.add_credit(
-            Account::EndingBalance,
-            100,
-            NaiveDate::from_ymd_opt(2020, 1, 1).unwrap(),
-        );
+        let ledger = AccountLedger::new(Account::Cash)
+            .debit_added(
+                Account::BeginningBalance,
+                100,
+                NaiveDate::from_ymd_opt(2020, 1, 1).unwrap(),
+            )
+            .credit_added(
+                Account::EndingBalance,
+                100,
+                NaiveDate::from_ymd_opt(2020, 1, 1).unwrap(),
+            );
 
         assert_eq!(ledger.debit_amount(), 100);
         assert_eq!(ledger.credit_amount(), 100);
@@ -408,20 +410,19 @@ mod tests {
 
     #[test]
     fn test_account_ledger_carry_forward() {
-        let mut ledger = AccountLedger::new(Account::Cash);
-        ledger.add_credit(
+        let ledger = AccountLedger::new(Account::Cash).credit_added(
             Account::Inventory,
             100,
             NaiveDate::from_ymd_opt(2020, 1, 15).unwrap(),
         );
 
-        let next_ledger = ledger.carry_forward(
+        let (closed_ledger, next_ledger) = ledger.carry_forward(
             NaiveDate::from_ymd_opt(2020, 1, 31).unwrap(),
             NaiveDate::from_ymd_opt(2020, 2, 1).unwrap(),
         );
 
-        assert_eq!(ledger.debit_amount(), 100);
-        assert_eq!(ledger.credit_amount(), 100);
+        assert_eq!(closed_ledger.debit_amount(), 100);
+        assert_eq!(closed_ledger.credit_amount(), 100);
         assert_eq!(next_ledger.debit_amount(), 0);
         assert_eq!(next_ledger.credit_amount(), 100);
     }
