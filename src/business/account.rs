@@ -219,15 +219,15 @@ pub fn is_ances_account(account: Account, ref_account: Account) -> bool {
 }
 
 pub struct AccountEntry {
-    offset_accout: Account,
-    amount: i64,
-    date: NaiveDate,
+    pub offset_accout: Account,
+    pub amount: i64,
+    pub date: NaiveDate,
 }
 
 pub struct AccountLedger {
-    account: Account,
-    debits: Vec<AccountEntry>,
-    credits: Vec<AccountEntry>,
+    pub account: Account,
+    pub debits: Vec<AccountEntry>,
+    pub credits: Vec<AccountEntry>,
 }
 
 impl AccountLedger {
