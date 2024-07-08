@@ -28,7 +28,16 @@ pub fn posting(
         .fold(carry_forward_ledger, post_transaction)
 }
 
-fn close_temp_accounts(posted_ledger: LedgerTree, period_ending_date: NaiveDate) -> LedgerTree {
+fn end_of_period_adjustment(
+    posted_ledger: LedgerTree,
+    period_ending_date: NaiveDate,
+) -> LedgerTree {
+    // todo
+
+    return posted_ledger;
+}
+
+fn close_temp_accounts(adjusted_ledger: LedgerTree, period_ending_date: NaiveDate) -> LedgerTree {
     let init_isl_expense = LedgerTree::new(Account::Expense);
     let init_isl_revenue = LedgerTree::new(Account::Revenue);
 
@@ -84,8 +93,8 @@ fn close_temp_accounts(posted_ledger: LedgerTree, period_ending_date: NaiveDate)
     };
 
     // todo Maybe optimize to remove the clone
-    let (isl_added_general, expense_isl, revenue_isl) = posted_ledger.clone().into_iter().fold(
-        (posted_ledger, init_isl_expense, init_isl_revenue),
+    let (isl_added_general, expense_isl, revenue_isl) = adjusted_ledger.clone().into_iter().fold(
+        (adjusted_ledger, init_isl_expense, init_isl_revenue),
         process_temp_ledger,
     );
 
@@ -151,3 +160,12 @@ fn close_permanent_accounts(
 
     temp_closed_general_ledger.fmap(&cloes_perm_ledger)
 }
+
+fn close_ledger(posted_ledger: LedgerTree, period_ending_date: NaiveDate) -> LedgerTree {
+    let adjusted_general_ledger = end_of_period_adjustment(posted_ledger, period_ending_date);
+    let temp_closed_general_ledger =
+        close_temp_accounts(adjusted_general_ledger, period_ending_date);
+    close_permanent_accounts(temp_closed_general_ledger, period_ending_date)
+}
+
+
