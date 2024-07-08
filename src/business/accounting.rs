@@ -3,6 +3,7 @@ use chrono::NaiveDate;
 use crate::business::account::{Account, LedgerTree};
 use crate::business::period::Period;
 use crate::business::transaction::Transaction;
+use crate::functor::Functor;
 
 use super::account::{is_desc_account, AccountLedger};
 
@@ -82,7 +83,8 @@ fn close_temp_accounts(posted_ledger: LedgerTree, period_ending_date: NaiveDate)
         }
     };
 
-    let (isl_added_general, expense_isl, revenue_isl) = posted_ledger.into_iter().fold(
+    // todo Maybe optimize to remove the clone
+    let (isl_added_general, expense_isl, revenue_isl) = posted_ledger.clone().into_iter().fold(
         (posted_ledger, init_isl_expense, init_isl_revenue),
         process_temp_ledger,
     );
@@ -114,3 +116,39 @@ fn close_temp_accounts(posted_ledger: LedgerTree, period_ending_date: NaiveDate)
 
     re_added_general
 }
+
+fn close_permanent_account(
+    temp_closed_general_ledger: LedgerTree,
+    period_ending_date: NaiveDate,
+) -> LedgerTree {
+    let cloes_perm_ledger = |ledger: AccountLedger| {
+        if is_desc_account(ledger.account, Account::Asset)
+            || is_desc_account(ledger.account, Account::Liability)
+            || is_desc_account(ledger.account, Account::Equity)
+        {
+            let debit_amount = ledger.debit_amount();
+            let credit_amount = ledger.credit_amount();
+
+            if debit_amount > credit_amount {
+                ledger.credit_added(
+                    Account::EndingBalance,
+                    debit_amount - credit_amount,
+                    period_ending_date.clone(),
+                )
+            } else if credit_amount > debit_amount {
+                ledger.debit_added(
+                    Account::EndingBalance,
+                    credit_amount - debit_amount,
+                    period_ending_date.clone(),
+                )
+            } else {
+                ledger
+            }
+        } else {
+            ledger
+        }
+    };
+
+    temp_closed_general_ledger.fmap(&cloes_perm_ledger)
+}
+

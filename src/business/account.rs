@@ -218,12 +218,14 @@ pub fn is_ances_account(account: Account, ref_account: Account) -> bool {
     _is_ancestor_account(root, ref_account)
 }
 
+#[derive(Debug, Clone)]
 pub struct AccountEntry {
     pub offset_accout: Account,
     pub amount: i64,
     pub date: NaiveDate,
 }
 
+#[derive(Debug, Clone)]
 pub struct AccountLedger {
     pub account: Account,
     pub debits: Vec<AccountEntry>,

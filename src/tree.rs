@@ -1,6 +1,6 @@
 use crate::{functor::Functor, hkt::Hkt1, impl_hkt1};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Tree<T> {
     pub value: T,
     pub children: Vec<Tree<T>>,
