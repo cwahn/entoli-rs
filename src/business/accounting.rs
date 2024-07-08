@@ -167,5 +167,3 @@ fn close_ledger(posted_ledger: LedgerTree, period_ending_date: NaiveDate) -> Led
         close_temp_accounts(adjusted_general_ledger, period_ending_date);
     close_permanent_accounts(temp_closed_general_ledger, period_ending_date)
 }
-
-
