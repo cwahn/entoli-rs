@@ -117,7 +117,7 @@ fn close_temp_accounts(posted_ledger: LedgerTree, period_ending_date: NaiveDate)
     re_added_general
 }
 
-fn close_permanent_account(
+fn close_permanent_accounts(
     temp_closed_general_ledger: LedgerTree,
     period_ending_date: NaiveDate,
 ) -> LedgerTree {
@@ -151,4 +151,3 @@ fn close_permanent_account(
 
     temp_closed_general_ledger.fmap(&cloes_perm_ledger)
 }
-
