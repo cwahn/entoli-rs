@@ -1,6 +1,5 @@
-pub mod const_iterator;
+pub mod base;
 pub mod data;
-pub mod hkt;
 pub mod misc;
 
 pub mod prelude;

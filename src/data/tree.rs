@@ -1,4 +1,4 @@
-use crate::{data::functor::Functor, hkt::Hkt1, misc::in_place};
+use crate::{base::hkt::Hkt1, data::functor::Functor, misc::in_place};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Tree<T> {

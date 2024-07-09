@@ -1,4 +1,4 @@
-use crate::{hkt::Hkt1, impl_hkt1};
+use crate::base::hkt::Hkt1;
 
 pub trait Functor: Hkt1 + Sized {
     fn fmap<B, F>(self, f: &F) -> Self::Of<B>
@@ -14,6 +14,7 @@ pub trait Functor: Hkt1 + Sized {
 mod tests {
 
     use super::*;
+    use crate::impl_hkt1;
 
     impl_hkt1!(Option);
 
