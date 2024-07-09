@@ -8,24 +8,24 @@ use crate::functor::Functor;
 use super::account::{is_desc_account, AccountLedger};
 
 pub fn posting(
-    carry_forward_ledger: LedgerTree,
+    carry_forward_ledger: &mut LedgerTree,
     current_period_transactions: Vec<Transaction>,
-) -> LedgerTree {
-    fn post_transaction(ledger: LedgerTree, t: Transaction) -> LedgerTree {
-        let debit_posted = ledger.update_ances_ledgers(t.debit_account, |x| {
-            x.debit_added(t.credit_account, t.amount, t.date)
+) {
+    fn post_transaction_mut(ledger: &mut LedgerTree, t: Transaction) {
+        // Debit posted
+        ledger.update_ances_ledgers(t.debit_account, |x| {
+            x.add_debit(t.credit_account, t.amount, t.date);
         });
 
-        let credit_posted = debit_posted.update_ances_ledgers(t.credit_account, |x| {
-            x.credit_added(t.debit_account, t.amount, t.date)
+        // Credit posted
+        ledger.update_ances_ledgers(t.credit_account, |x| {
+            x.add_credit(t.debit_account, t.amount, t.date);
         });
-
-        credit_posted
     }
 
     current_period_transactions
         .into_iter()
-        .fold(carry_forward_ledger, post_transaction)
+        .for_each(|t| post_transaction_mut(carry_forward_ledger, t));
 }
 
 fn end_of_period_adjustment(
@@ -49,7 +49,7 @@ fn close_temp_accounts(adjusted_ledger: LedgerTree, period_ending_date: NaiveDat
             let debit_amount = temp_ledger.debit_amount();
 
             let new_general = general_ledger.update_ledger(temp_ledger.account, |x| {
-                x.credit_added(
+                x.add_credit(
                     Account::IncomeSummary,
                     debit_amount,
                     period_ending_date.clone(),
@@ -79,7 +79,7 @@ fn close_temp_accounts(adjusted_ledger: LedgerTree, period_ending_date: NaiveDat
             });
 
             let new_revenue_isl = revenue_isl.update_ledger(temp_ledger.account, |x| {
-                x.credit_added(
+                x.add_credit(
                     Account::IncomeSummary,
                     credit_amount,
                     period_ending_date.clone(),
@@ -104,7 +104,7 @@ fn close_temp_accounts(adjusted_ledger: LedgerTree, period_ending_date: NaiveDat
     let re_added_general = if expanse_amount > revenue_amount {
         // Net loss
         isl_added_general.update_ances_ledgers(Account::RetainedEarnings, |x| {
-            x.debit_added(
+            x.add_debit(
                 Account::RetainedEarnings,
                 expanse_amount - revenue_amount,
                 period_ending_date.clone(),
@@ -113,7 +113,7 @@ fn close_temp_accounts(adjusted_ledger: LedgerTree, period_ending_date: NaiveDat
     } else if revenue_amount > expanse_amount {
         // Net income
         isl_added_general.update_ances_ledgers(Account::RetainedEarnings, |x| {
-            x.credit_added(
+            x.add_credit(
                 Account::RetainedEarnings,
                 revenue_amount - expanse_amount,
                 period_ending_date.clone(),
@@ -139,13 +139,13 @@ fn close_permanent_accounts(
             let credit_amount = ledger.credit_amount();
 
             if debit_amount > credit_amount {
-                ledger.credit_added(
+                ledger.add_credit(
                     Account::EndingBalance,
                     debit_amount - credit_amount,
                     period_ending_date.clone(),
                 )
             } else if credit_amount > debit_amount {
-                ledger.debit_added(
+                ledger.add_debit(
                     Account::EndingBalance,
                     credit_amount - debit_amount,
                     period_ending_date.clone(),
