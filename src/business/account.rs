@@ -241,7 +241,7 @@ impl AccountLedger {
         }
     }
 
-    pub fn add_debit(&mut self, offset_accout: Account, amount: i64, date: NaiveDate) -> Self {
+    pub fn debit_added(mut self, offset_accout: Account, amount: i64, date: NaiveDate) -> Self {
         self.debits.push(AccountEntry {
             offset_accout,
             amount,
@@ -250,7 +250,7 @@ impl AccountLedger {
         self
     }
 
-    pub fn add_credit(&mut self, offset_accout: Account, amount: i64, date: NaiveDate) -> Self {
+    pub fn credit_added(mut self, offset_accout: Account, amount: i64, date: NaiveDate) -> Self {
         self.credits.push(AccountEntry {
             offset_accout,
             amount,
@@ -298,12 +298,12 @@ impl AccountLedger {
 
         if debit_amount > credit_amount {
             (
-                self.add_credit(
+                self.credit_added(
                     Account::EndingBalance,
                     debit_amount - credit_amount,
                     ending_date,
                 ),
-                ledger.add_debit(
+                ledger.debit_added(
                     Account::BeginningBalance,
                     debit_amount - credit_amount,
                     beginning_date,
@@ -311,12 +311,12 @@ impl AccountLedger {
             )
         } else if credit_amount > debit_amount {
             (
-                self.add_debit(
+                self.debit_added(
                     Account::EndingBalance,
                     credit_amount - debit_amount,
                     ending_date,
                 ),
-                ledger.add_credit(
+                ledger.credit_added(
                     Account::BeginningBalance,
                     credit_amount - debit_amount,
                     beginning_date,
@@ -347,35 +347,74 @@ impl LedgerTree {
         )
     }
 
-    pub fn update_ledger<F>(&mut self, account: Account, f_mut: &F)
+    // pub fn update_ledger<F>(&mut self, account: Account, f_mut: &F)
+    // where
+    //     F: Fn(&mut AccountLedger),
+    // {
+    //     self.update(&|ledger| {
+    //         if ledger.account == account {
+    //             f_mut(ledger);
+    //         }
+    //     })
+    // }
+
+    pub fn fmap_ledger<F>(self, account: Account, f: F) -> LedgerTree
     where
-        F: Fn(&mut AccountLedger),
+        F: Fn(AccountLedger) -> AccountLedger,
     {
-        self.update(&|ledger| {
+        self.fmap1(&|ledger: AccountLedger| {
             if ledger.account == account {
-                f_mut(ledger);
+                f(ledger)
+            } else {
+                ledger
             }
         })
     }
 
-    pub fn update_desc_ledgers<F>(&mut self, account: Account, f_mut: F)
+    // pub fn update_desc_ledgers<F>(&mut self, account: Account, f_mut: F)
+    // where
+    //     F: Fn(&mut AccountLedger),
+    // {
+    //     self.update(&|ledger| {
+    //         if is_desc_account(ledger.account, account) {
+    //             f_mut(ledger);
+    //         }
+    //     });
+    // }
+
+    pub fn fmap_desc_ledgers<F>(self, account: Account, f: F) -> LedgerTree
     where
-        F: Fn(&mut AccountLedger),
+        F: Fn(AccountLedger) -> AccountLedger,
     {
-        self.update(&|ledger| {
+        self.fmap1(&|ledger: AccountLedger| {
             if is_desc_account(ledger.account, account) {
-                f_mut(ledger);
+                f(ledger)
+            } else {
+                ledger
             }
-        });
+        })
     }
 
-    pub fn update_ances_ledgers<F>(&mut self, account: Account, f: F)
+    // pub fn update_ances_ledgers<F>(&mut self, account: Account, f: F)
+    // where
+    //     F: Fn(&mut AccountLedger),
+    // {
+    //     self.update(&|ledger| {
+    //         if is_desc_account(account, ledger.account) {
+    //             f(ledger);
+    //         }
+    //     })
+    // }
+
+    pub fn fmap_ances_ledgers<F>(self, account: Account, f: F) -> LedgerTree
     where
-        F: Fn(&mut AccountLedger),
+        F: Fn(AccountLedger) -> AccountLedger,
     {
-        self.update(&|ledger| {
+        self.fmap1(&|ledger: AccountLedger| {
             if is_desc_account(account, ledger.account) {
-                f(ledger);
+                f(ledger)
+            } else {
+                ledger
             }
         })
     }
@@ -463,12 +502,12 @@ mod tests {
     #[test]
     fn test_account_ledger() {
         let ledger = AccountLedger::new(Account::Cash)
-            .add_debit(
+            .debit_added(
                 Account::BeginningBalance,
                 100,
                 NaiveDate::from_ymd_opt(2020, 1, 1).unwrap(),
             )
-            .add_credit(
+            .credit_added(
                 Account::EndingBalance,
                 100,
                 NaiveDate::from_ymd_opt(2020, 1, 1).unwrap(),
@@ -482,7 +521,7 @@ mod tests {
 
     #[test]
     fn test_account_ledger_carry_forward() {
-        let ledger = AccountLedger::new(Account::Cash).add_credit(
+        let ledger = AccountLedger::new(Account::Cash).credit_added(
             Account::Inventory,
             100,
             NaiveDate::from_ymd_opt(2020, 1, 15).unwrap(),
