@@ -28,102 +28,143 @@ pub fn posting(
         .for_each(|t| post_transaction_mut(carry_forward_ledger, t));
 }
 
-fn end_of_period_adjustment(
-    posted_ledger: LedgerTree,
-    period_ending_date: NaiveDate,
-) -> LedgerTree {
+fn end_of_period_adjustment(posted_ledger: &mut LedgerTree, period_ending_date: NaiveDate) {
     // todo
 
-    return posted_ledger;
+    // return posted_ledger;
 }
 
-fn close_temp_accounts(adjusted_ledger: LedgerTree, period_ending_date: NaiveDate) -> LedgerTree {
-    let init_isl_expense = LedgerTree::new(Account::Expense);
-    let init_isl_revenue = LedgerTree::new(Account::Revenue);
+fn close_temp_accounts(adjusted_ledger: &mut LedgerTree, period_ending_date: NaiveDate) {
+    let mut expense_isl = LedgerTree::new(Account::Expense);
+    let mut revenue_isl = LedgerTree::new(Account::Revenue);
 
-    let process_temp_ledger = |general_e_r: (LedgerTree, LedgerTree, LedgerTree),
-                               temp_ledger: AccountLedger| {
+    // let process_temp_ledger = |general_e_r: (LedgerTree, LedgerTree, LedgerTree),
+    //                            temp_ledger: AccountLedger| {
+    //     if is_desc_account(temp_ledger.account, Account::Expense) {
+    //         let (general_ledger, expense_isl, revenue_isl) = general_e_r;
+
+    //         let debit_amount = temp_ledger.debit_amount();
+
+    //         let new_general = general_ledger.update_ledger(temp_ledger.account, |x| {
+    //             x.add_credit(
+    //                 Account::IncomeSummary,
+    //                 debit_amount,
+    //                 period_ending_date.clone(),
+    //             )
+    //         });
+
+    //         let new_expense_isl = expense_isl.update_ledger(temp_ledger.account, |x| {
+    //             x.add_debit(
+    //                 Account::IncomeSummary,
+    //                 debit_amount,
+    //                 period_ending_date.clone(),
+    //             )
+    //         });
+
+    //         (new_general, new_expense_isl, revenue_isl)
+    //     } else if is_desc_account(temp_ledger.account, Account::Revenue) {
+    //         let (general_ledger, expense_isl, revenue_isl) = general_e_r;
+
+    //         let credit_amount = temp_ledger.credit_amount();
+
+    //         let new_general = general_ledger.update_ledger(temp_ledger.account, |x| {
+    //             x.add_debit(
+    //                 Account::IncomeSummary,
+    //                 credit_amount,
+    //                 period_ending_date.clone(),
+    //             )
+    //         });
+
+    //         let new_revenue_isl = revenue_isl.update_ledger(temp_ledger.account, |x| {
+    //             x.add_credit(
+    //                 Account::IncomeSummary,
+    //                 credit_amount,
+    //                 period_ending_date.clone(),
+    //             )
+    //         });
+
+    //         (new_general, expense_isl, new_revenue_isl)
+    //     } else {
+    //         general_e_r
+    //     }
+    // };
+
+    let process_temp_ledger = |temp_ledger: &AccountLedger| {
         if is_desc_account(temp_ledger.account, Account::Expense) {
-            let (general_ledger, expense_isl, revenue_isl) = general_e_r;
-
             let debit_amount = temp_ledger.debit_amount();
 
-            let new_general = general_ledger.update_ledger(temp_ledger.account, |x| {
+            adjusted_ledger.update_ledger(temp_ledger.account, &|x| {
                 x.add_credit(
                     Account::IncomeSummary,
                     debit_amount,
                     period_ending_date.clone(),
-                )
+                );
             });
 
-            let new_expense_isl = expense_isl.update_ledger(temp_ledger.account, |x| {
-                x.debit_added(
+            expense_isl.update_ledger(temp_ledger.account, &|x| {
+                x.add_debit(
                     Account::IncomeSummary,
                     debit_amount,
                     period_ending_date.clone(),
-                )
+                );
             });
-
-            (new_general, new_expense_isl, revenue_isl)
         } else if is_desc_account(temp_ledger.account, Account::Revenue) {
-            let (general_ledger, expense_isl, revenue_isl) = general_e_r;
-
             let credit_amount = temp_ledger.credit_amount();
 
-            let new_general = general_ledger.update_ledger(temp_ledger.account, |x| {
-                x.debit_added(
+            adjusted_ledger.update_ledger(temp_ledger.account, &|x| {
+                x.add_debit(
                     Account::IncomeSummary,
                     credit_amount,
                     period_ending_date.clone(),
-                )
+                );
             });
 
-            let new_revenue_isl = revenue_isl.update_ledger(temp_ledger.account, |x| {
+            revenue_isl.update_ledger(temp_ledger.account, &|x| {
                 x.add_credit(
                     Account::IncomeSummary,
                     credit_amount,
                     period_ending_date.clone(),
-                )
+                );
             });
-
-            (new_general, expense_isl, new_revenue_isl)
         } else {
-            general_e_r
         }
     };
 
     // todo Maybe optimize to remove the clone
-    let (isl_added_general, expense_isl, revenue_isl) = adjusted_ledger.clone().into_iter().fold(
-        (adjusted_ledger, init_isl_expense, init_isl_revenue),
-        process_temp_ledger,
-    );
+    // let (isl_added_general, expense_isl, revenue_isl) = adjusted_ledger.clone().into_iter().fold(
+    //     (adjusted_ledger, init_isl_expense, init_isl_revenue),
+    //     process_temp_ledger,
+    // );
+
+    // adjusted_ledger.mut_iter().for_each(process_temp_ledger);
+    adjusted_ledger.update(&process_temp_ledger);
 
     let expanse_amount = expense_isl.value.debit_amount();
     let revenue_amount = revenue_isl.value.credit_amount();
 
-    let re_added_general = if expanse_amount > revenue_amount {
+    if expanse_amount > revenue_amount {
         // Net loss
-        isl_added_general.update_ances_ledgers(Account::RetainedEarnings, |x| {
+        adjusted_ledger.update_ances_ledgers(Account::RetainedEarnings, |x| {
             x.add_debit(
                 Account::RetainedEarnings,
                 expanse_amount - revenue_amount,
                 period_ending_date.clone(),
-            )
-        })
+            );
+        });
     } else if revenue_amount > expanse_amount {
         // Net income
-        isl_added_general.update_ances_ledgers(Account::RetainedEarnings, |x| {
+        adjusted_ledger.update_ances_ledgers(Account::RetainedEarnings, |x| {
             x.add_credit(
                 Account::RetainedEarnings,
                 revenue_amount - expanse_amount,
                 period_ending_date.clone(),
-            )
-        })
+            );
+        });
     } else {
-        isl_added_general
+        // adjusted_ledger
     };
 
-    re_added_general
+    // adjusted_ledger
 }
 
 fn close_permanent_accounts(
