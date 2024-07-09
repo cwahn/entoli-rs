@@ -15,30 +15,6 @@ mod tests {
     use crate::base::hkt::Hkt1;
     use crate::impl_hkt1;
 
-    // impl_hkt1!(Option);
-
-    // impl<T> Functor for Option<T> {
-    //     fn fmap<B, F>(self, f: &F) -> Self::Of<B>
-    //     where
-    //         F: Fn(T) -> B,
-    //     {
-    //         match self {
-    //             Some(x) => Some(f(x)),
-    //             None => None,
-    //         }
-    //     }
-
-    //     fn fmap1<F>(self, f: &F) -> Self
-    //     where
-    //         F: Fn(T) -> T,
-    //     {
-    //         match self {
-    //             Some(x) => Some(f(x)),
-    //             None => None,
-    //         }
-    //     }
-    // }
-
     impl<T> Applicative for Option<T> {
         fn pure<A>(a: A) -> Self::Of<A> {
             Some(a)
