@@ -3,7 +3,7 @@ use chrono::format::Item;
 pub trait Hkt1 {
     type HktOf1;
 
-    type Of<W1>: Hkt1<HktOf1 = W1> + Hkt1<Of<Self::HktOf1> = Self> + Hkt1<Of<W1> = Self::Of<W1>>;
+    // type Of<W1>: Hkt1<HktOf1 = W1> + Hkt1<Of<Self::HktOf1> = Self> + Hkt1<Of<W1> = Self::Of<W1>>;
 }
 
 pub trait Hkt2 {
@@ -21,7 +21,7 @@ macro_rules! impl_hkt1 {
         impl<T1> Hkt1 for $type_constructor<T1> {
             type HktOf1 = T1;
 
-            type Of<W1> = $type_constructor<W1>;
+            // type Of<W1> = $type_constructor<W1>;
         }
     };
 }

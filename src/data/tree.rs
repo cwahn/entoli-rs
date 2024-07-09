@@ -97,15 +97,15 @@ impl<T> IntoIterator for Tree<T> {
 impl<T> Hkt1 for Tree<T> {
     type HktOf1 = T;
 
-    type Of<W1> = Tree<W1>;
+    // type Of<W1> = Tree<W1>;
 }
 
-impl<T> Functor for Tree<T> {
+impl<A> Functor<A> for Tree<A> {
     type Map<B, F> = Tree<B>;
 
     fn fmap<B, F>(self, f: &F) -> Tree<B>
     where
-        F: Fn(T) -> B,
+        F: Fn(A) -> B,
     {
         Tree {
             value: f(self.value),
@@ -119,7 +119,7 @@ impl<T> Functor for Tree<T> {
 
     fn fmap1<F>(mut self, f: &F) -> Self
     where
-        F: Fn(Self::HktOf1) -> Self::HktOf1,
+        F: Fn(A) -> A,
     {
         self.update(&in_place(f));
         self

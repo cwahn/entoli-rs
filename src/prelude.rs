@@ -1,6 +1,9 @@
 use crate::{
     base::hkt::Hkt1,
-    data::{functor::Functor, monad::Monad},
+    data::{
+        functor::Functor,
+        // monad::Monad
+    },
     impl_hkt1,
 };
 

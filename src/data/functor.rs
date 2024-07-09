@@ -1,7 +1,7 @@
 use crate::base::hkt::Hkt1;
 
-pub trait Functor: Hkt1 + Sized {
-    type Map<T, F>: Functor;
+pub trait Functor<A>: Sized {
+    type Map<T, F>: Functor<T>;
 
     // fn fmap<B, F>(self, f: &F) -> Self::Of<B>
     // where
@@ -9,7 +9,7 @@ pub trait Functor: Hkt1 + Sized {
 
     fn fmap<B, F>(self, f: &F) -> Self::Map<B, F>
     where
-        F: Fn(Self::HktOf1) -> B;
+        F: Fn(A) -> B;
 
     // fn fmap1<F>(self, f: &F) -> Self
     // where
@@ -17,7 +17,7 @@ pub trait Functor: Hkt1 + Sized {
 
     fn fmap1<F>(self, f: &F) -> Self
     where
-        F: Fn(Self::HktOf1) -> Self::HktOf1;
+        F: Fn(A) -> A;
 }
 
 #[cfg(test)]
@@ -28,12 +28,12 @@ mod tests {
 
     impl_hkt1!(Option);
 
-    impl<T> Functor for Option<T> {
+    impl<A> Functor<A> for Option<A> {
         type Map<B, F> = Option<B>;
 
-        fn fmap<B, F>(self, f: &F) -> Self::Of<B>
+        fn fmap<B, F>(self, f: &F) -> Option<B>
         where
-            F: Fn(T) -> B,
+            F: Fn(A) -> B,
         {
             match self {
                 Some(x) => Some(f(x)),
@@ -41,9 +41,9 @@ mod tests {
             }
         }
 
-        fn fmap1<F>(self, f: &F) -> Self
+        fn fmap1<F>(self, f: &F) -> Option<A>
         where
-            F: Fn(T) -> T,
+            F: Fn(A) -> A,
         {
             match self {
                 Some(x) => Some(f(x)),
