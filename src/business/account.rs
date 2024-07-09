@@ -347,41 +347,35 @@ impl LedgerTree {
         )
     }
 
-    pub fn map_ledger<F>(self, account: Account, f: F) -> LedgerTree
+    pub fn update_ledger<F>(&mut self, account: Account, f_mut: &F)
     where
-        F: Fn(AccountLedger) -> AccountLedger,
+        F: Fn(&mut AccountLedger),
     {
-        self.fmap(&|ledger| {
+        self.update(&|ledger| {
             if ledger.account == account {
-                f(ledger)
-            } else {
-                ledger
+                f_mut(ledger);
             }
         })
     }
 
-    pub fn map_desc_ledgers<F>(self, account: Account, f: F) -> LedgerTree
+    pub fn update_desc_ledgers<F>(&mut self, account: Account, f_mut: F)
     where
-        F: Fn(AccountLedger) -> AccountLedger,
+        F: Fn(&mut AccountLedger),
     {
-        self.fmap(&|x| {
-            if is_desc_account(x.account, account) {
-                f(x)
-            } else {
-                x
+        self.update(&|ledger| {
+            if is_desc_account(ledger.account, account) {
+                f_mut(ledger);
             }
-        })
+        });
     }
 
-    pub fn map_ances_ledgers<F>(self, account: Account, f: F) -> LedgerTree
+    pub fn update_ances_ledgers<F>(&mut self, account: Account, f: F)
     where
-        F: Fn(AccountLedger) -> AccountLedger,
+        F: Fn(&mut AccountLedger),
     {
-        self.fmap(&|x| {
-            if is_desc_account(account, x.account) {
-                f(x)
-            } else {
-                x
+        self.update(&|ledger| {
+            if is_desc_account(account, ledger.account) {
+                f(ledger);
             }
         })
     }

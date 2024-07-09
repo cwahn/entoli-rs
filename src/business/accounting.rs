@@ -12,11 +12,11 @@ pub fn posting(
     current_period_transactions: Vec<Transaction>,
 ) -> LedgerTree {
     fn post_transaction(ledger: LedgerTree, t: Transaction) -> LedgerTree {
-        let debit_posted = ledger.map_ances_ledgers(t.debit_account, |x| {
+        let debit_posted = ledger.update_ances_ledgers(t.debit_account, |x| {
             x.debit_added(t.credit_account, t.amount, t.date)
         });
 
-        let credit_posted = debit_posted.map_ances_ledgers(t.credit_account, |x| {
+        let credit_posted = debit_posted.update_ances_ledgers(t.credit_account, |x| {
             x.credit_added(t.debit_account, t.amount, t.date)
         });
 
@@ -48,7 +48,7 @@ fn close_temp_accounts(adjusted_ledger: LedgerTree, period_ending_date: NaiveDat
 
             let debit_amount = temp_ledger.debit_amount();
 
-            let new_general = general_ledger.map_ledger(temp_ledger.account, |x| {
+            let new_general = general_ledger.update_ledger(temp_ledger.account, |x| {
                 x.credit_added(
                     Account::IncomeSummary,
                     debit_amount,
@@ -56,7 +56,7 @@ fn close_temp_accounts(adjusted_ledger: LedgerTree, period_ending_date: NaiveDat
                 )
             });
 
-            let new_expense_isl = expense_isl.map_ledger(temp_ledger.account, |x| {
+            let new_expense_isl = expense_isl.update_ledger(temp_ledger.account, |x| {
                 x.debit_added(
                     Account::IncomeSummary,
                     debit_amount,
@@ -70,7 +70,7 @@ fn close_temp_accounts(adjusted_ledger: LedgerTree, period_ending_date: NaiveDat
 
             let credit_amount = temp_ledger.credit_amount();
 
-            let new_general = general_ledger.map_ledger(temp_ledger.account, |x| {
+            let new_general = general_ledger.update_ledger(temp_ledger.account, |x| {
                 x.debit_added(
                     Account::IncomeSummary,
                     credit_amount,
@@ -78,7 +78,7 @@ fn close_temp_accounts(adjusted_ledger: LedgerTree, period_ending_date: NaiveDat
                 )
             });
 
-            let new_revenue_isl = revenue_isl.map_ledger(temp_ledger.account, |x| {
+            let new_revenue_isl = revenue_isl.update_ledger(temp_ledger.account, |x| {
                 x.credit_added(
                     Account::IncomeSummary,
                     credit_amount,
@@ -103,7 +103,7 @@ fn close_temp_accounts(adjusted_ledger: LedgerTree, period_ending_date: NaiveDat
 
     let re_added_general = if expanse_amount > revenue_amount {
         // Net loss
-        isl_added_general.map_ances_ledgers(Account::RetainedEarnings, |x| {
+        isl_added_general.update_ances_ledgers(Account::RetainedEarnings, |x| {
             x.debit_added(
                 Account::RetainedEarnings,
                 expanse_amount - revenue_amount,
@@ -112,7 +112,7 @@ fn close_temp_accounts(adjusted_ledger: LedgerTree, period_ending_date: NaiveDat
         })
     } else if revenue_amount > expanse_amount {
         // Net income
-        isl_added_general.map_ances_ledgers(Account::RetainedEarnings, |x| {
+        isl_added_general.update_ances_ledgers(Account::RetainedEarnings, |x| {
             x.credit_added(
                 Account::RetainedEarnings,
                 revenue_amount - expanse_amount,
@@ -130,7 +130,7 @@ fn close_permanent_accounts(
     temp_closed_general_ledger: LedgerTree,
     period_ending_date: NaiveDate,
 ) -> LedgerTree {
-    let cloes_perm_ledger = |ledger: AccountLedger| {
+    let cloes_perm_ledger = |ledger: &AccountLedger| {
         if is_desc_account(ledger.account, Account::Asset)
             || is_desc_account(ledger.account, Account::Liability)
             || is_desc_account(ledger.account, Account::Equity)

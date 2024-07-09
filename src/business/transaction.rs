@@ -52,6 +52,7 @@ pub fn sub_transactions(transaction: &TransactionType) -> Vec<TransactionType> {
     }
 }
 
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct Transaction {
     pub trans_type: TransactionType,
     pub debit_account: Account,

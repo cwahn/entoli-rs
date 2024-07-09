@@ -1,9 +1,14 @@
 use crate::{hkt::Hkt1, impl_hkt1};
 
-pub trait Functor: Hkt1 {
-    fn fmap<B, F>(self, f: &F) -> Self::Of<B>
+pub trait Functor: Hkt1 + Sized {
+    fn fmap<B, F>(&self, f: &F) -> Self::Of<B>
     where
-        F: Fn(Self::HktOf1) -> B;
+        F: Fn(&Self::HktOf1) -> B;
+
+    // ! Less useful when inner type is also something expensive to copy
+    fn fmap1<F>(self, f: &F) -> Self
+    where
+        F: Fn(&Self::HktOf1) -> Self::HktOf1;
 }
 
 // pub trait FunctorMut: Functor {
@@ -21,12 +26,22 @@ pub trait FunctorOnce: Functor {
 impl_hkt1!(Option);
 
 impl<T> Functor for Option<T> {
-    fn fmap<B, F>(self, f: &F) -> Self::Of<B>
+    fn fmap<B, F>(&self, f: &F) -> Self::Of<B>
     where
-        F: Fn(T) -> B,
+        F: Fn(&T) -> B,
     {
         match self {
             Some(x) => Some(f(x)),
+            None => None,
+        }
+    }
+
+    fn fmap1<F>(self, f: &F) -> Self
+    where
+        F: Fn(&T) -> T,
+    {
+        match self {
+            Some(x) => Some(f(&x)),
             None => None,
         }
     }
@@ -95,7 +110,7 @@ mod tests {
     #[test]
     fn test_option_functor() {
         let x = Some(1);
-        let f = |x: i32| x + 1;
+        let f = |x: &i32| x + 1;
         let y = x.fmap(&f);
         assert_eq!(y, Some(2));
     }

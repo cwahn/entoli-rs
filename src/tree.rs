@@ -50,6 +50,11 @@ impl<T> Tree<T> {
 
     //     result
     // }
+
+    pub fn update<F: Fn(&mut T)>(&mut self, f_mut: &F) {
+        f_mut(&mut self.value);
+        self.children.iter_mut().for_each(|c| c.update(f_mut));
+    }
 }
 
 pub struct TreeIter<'a, T> {
@@ -101,19 +106,33 @@ impl<T> Hkt1 for Tree<T> {
     type Of<W1> = Tree<W1>;
 }
 
+fn to_in_place<A, F>(f: F) -> impl Fn(&mut A) -> ()
+where
+    F: Fn(&A) -> A,
+{
+    move |value: &mut A| {
+        let new_value = f(value);
+        *value = new_value;
+    }
+}
+
 impl<T> Functor for Tree<T> {
-    fn fmap<B, F>(self, f: &F) -> Tree<B>
+    fn fmap<B, F>(&self, f: &F) -> Tree<B>
     where
-        F: Fn(T) -> B,
+        F: Fn(&T) -> B,
     {
         Tree {
-            value: f(self.value),
-            children: self
-                .children
-                .into_iter()
-                .map(|child| child.fmap(f))
-                .collect(),
+            value: f(&self.value),
+            children: self.children.iter().map(|child| child.fmap(f)).collect(),
         }
+    }
+
+    fn fmap1<F>(mut self, f: &F) -> Self
+    where
+        F: Fn(&Self::HktOf1) -> Self::HktOf1,
+    {
+        self.update(&to_in_place(f));
+        self
     }
 }
 
@@ -264,7 +283,7 @@ mod tests {
             ],
         };
 
-        let f = |n: i32| n.to_string();
+        let f = |n: &i32| n.to_string();
 
         let mapped = tree1.fmap(&f);
 
