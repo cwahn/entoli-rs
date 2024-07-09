@@ -1,7 +1,7 @@
-use crate::functor::Functor;
+use crate::data::functor::Functor;
 use chrono::{offset, NaiveDate};
 
-use crate::tree::Tree;
+use crate::data::tree::Tree;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum Account {

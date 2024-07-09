@@ -3,7 +3,7 @@ use chrono::NaiveDate;
 use crate::business::account::{Account, LedgerTree};
 use crate::business::period::Period;
 use crate::business::transaction::Transaction;
-use crate::functor::Functor;
+use crate::data::functor::Functor;
 
 use super::account::{is_desc_account, AccountLedger};
 
