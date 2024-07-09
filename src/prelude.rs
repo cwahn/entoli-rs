@@ -1,3 +1,9 @@
+use crate::{
+    base::hkt::Hkt1,
+    data::{functor::Functor, monad::Monad},
+    impl_hkt1,
+};
+
 #[inline(always)]
 pub fn map<'a, A, B, F>(f: F, xs: impl IntoIterator<Item = A>) -> impl Iterator<Item = B>
 where
@@ -20,6 +26,53 @@ where
     F: for<'b> Fn(B, &'b A) -> B,
 {
     xs.into_iter().fold(acc, move |acc, a| f(acc, &a))
+}
+
+// Io
+
+pub trait Io: Monad {
+    type Item;
+
+    fn run(self) -> Self::Item;
+}
+
+pub struct IoMap<A, B, F>
+where
+    F: Fn(A::Item) -> B,
+    A: Io,
+{
+    io: A,
+    f: F,
+}
+
+// impl_hkt1!(IoMap);
+
+impl<A, B, F> Hkt1 for IoMap<A, B, F>
+where
+    F: Fn(A::Item) -> B,
+    A: Io,
+{
+    type HktOf1 = A::Item;
+    type Of<T> = IoMap<A, T, F>;
+}
+
+impl<A, B, F> Functor for IoMap<A, B, F>
+where
+    F: Fn(A::Item) -> B,
+    A: Io,
+{
+    type Item = B;
+    type HktOf1 = A::HktOf1;
+
+    fn fmap<G>(self, g: G) -> Self::Of<B>
+    where
+        G: Fn(Self::HktOf1) -> B,
+    {
+        IoMap {
+            io: self.io,
+            f: |x| g(self.f(x)),
+        }
+    }
 }
 
 #[cfg(test)]

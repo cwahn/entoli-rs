@@ -10,6 +10,8 @@ pub trait Functor: Hkt1 + Sized {
         F: Fn(Self::HktOf1) -> Self::HktOf1;
 }
 
+
+
 #[cfg(test)]
 mod tests {
 

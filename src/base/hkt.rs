@@ -1,3 +1,5 @@
+use chrono::format::Item;
+
 pub trait Hkt1 {
     type HktOf1;
 
@@ -35,3 +37,17 @@ macro_rules! impl_hkt2 {
         }
     };
 }
+
+// Blanket implementations
+
+// Implement Hkt1 for Iterator
+
+// ! Associated type position impl trait (ATPIT) is unstable
+// impl<T> Hkt1 for T
+// where
+//     T: Iterator,
+// {
+//     type HktOf1 = T::Item;
+
+//     type Of<W1> = impl Iterator<Item = W1>;
+// }
