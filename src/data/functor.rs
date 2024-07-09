@@ -1,16 +1,24 @@
 use crate::base::hkt::Hkt1;
 
 pub trait Functor: Hkt1 + Sized {
-    fn fmap<B, F>(self, f: &F) -> Self::Of<B>
+    type Map<T, F>: Functor;
+
+    // fn fmap<B, F>(self, f: &F) -> Self::Of<B>
+    // where
+    //     F: Fn(Self::HktOf1) -> B;
+
+    fn fmap<B, F>(self, f: &F) -> Self::Map<B, F>
     where
         F: Fn(Self::HktOf1) -> B;
+
+    // fn fmap1<F>(self, f: &F) -> Self
+    // where
+    //     F: Fn(Self::HktOf1) -> Self::HktOf1;
 
     fn fmap1<F>(self, f: &F) -> Self
     where
         F: Fn(Self::HktOf1) -> Self::HktOf1;
 }
-
-
 
 #[cfg(test)]
 mod tests {
@@ -21,6 +29,8 @@ mod tests {
     impl_hkt1!(Option);
 
     impl<T> Functor for Option<T> {
+        type Map<B, F> = Option<B>;
+
         fn fmap<B, F>(self, f: &F) -> Self::Of<B>
         where
             F: Fn(T) -> B,

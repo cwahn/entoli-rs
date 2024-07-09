@@ -101,6 +101,8 @@ impl<T> Hkt1 for Tree<T> {
 }
 
 impl<T> Functor for Tree<T> {
+    type Map<B, F> = Tree<B>;
+
     fn fmap<B, F>(self, f: &F) -> Tree<B>
     where
         F: Fn(T) -> B,
