@@ -38,10 +38,10 @@
 
 //     #[test]
 //     fn test_applicative_apply() {
-//         assert_eq!(None::<i32>.apply(None::<fn(i32) -> i32>), None);
+//         assert_eq!(None::<i32>.apply(None::<Fn(i32) -> i32>), None);
 //         assert_eq!(None.apply(Some(|x: i32| x + 1)), None);
 
-//         assert_eq!(Some(1).apply(None::<fn(i32) -> i32>), None);
+//         assert_eq!(Some(1).apply(None::<Fn(i32) -> i32>), None);
 //         assert_eq!(Some(1).apply(Some(|x: i32| x + 1)), Some(2));
 //     }
 // }
@@ -93,6 +93,34 @@ mod tests {
             }
         }
     }
+
+    // Impl for std::vec::IntoIter<A>
+    // Map<std::vec::IntoIter<F>
+
+    // impl<A> Applicative<A> for std::vec::IntoIter<A> {
+    //     type Pure<T> = std::vec::IntoIter<T>;
+    //     type Apf<B, F> = std::vec::IntoIter<F>
+    //     where
+    //         F: Fn(A) -> B + Clone;
+
+    //     // FlatMap<std::vec::IntoIter<A>, Map<std::vec::IntoIter<F>, {closure@src/data/applicative.rs:120:50: 120:58}>, {closure@src/data/applicative.rs:120:27: 120:35}>
+    //     type Ap<B, F> = std::iter::FlatMap<Self, std::iter::Map<std::vec::IntoIter<F>, F>, F>
+    //     where
+    //         F: Fn(A) -> B + Clone;
+
+    //     fn pure(a: A) -> Self::Pure<A> {
+    //         vec![a].into_iter()
+    //     }
+
+    //     fn apply<B, F>(self, f: Self::Apf<B, F>) -> Self::Ap<B, F>
+    //     where
+    //         F: Fn(A) -> B + Clone,
+    //     {
+    //         // Cartesian product
+    //         self.flat_map(move |x| f.clone().map(move |f| f(x)))
+    //         // A -> List<B>
+    //     }
+    // }
 
     #[test]
     fn test_applicative_pure() {

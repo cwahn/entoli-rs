@@ -100,17 +100,17 @@ mod tests {
 
     // Impl for std::iter::Map<I, F>
 
-    impl<I, A, B, F> Functor<B> for iter::Map<I, F>
+    impl<I, A, B, F> Functor<B> for std::iter::Map<I, F>
     where
         I: Iterator<Item = A>,
         F: Fn(A) -> B + Clone,
     {
-        type Map<C, G> = iter::Map<Self, G>
+        type Map<C, G> = std::iter::Map<Self, G>
         where
             G: Fn(B) -> C + Clone;
 
         #[inline(always)]
-        fn fmap<C, G>(self, g: G) -> iter::Map<Self, G>
+        fn fmap<C, G>(self, g: G) -> std::iter::Map<Self, G>
         where
             G: Fn(B) -> C + Clone,
         {
@@ -118,7 +118,36 @@ mod tests {
         }
 
         #[inline(always)]
-        fn fmap1<G>(self, g: G) -> iter::Map<Self, G>
+        fn fmap1<G>(self, g: G) -> std::iter::Map<Self, G>
+        where
+            G: Fn(B) -> B + Clone,
+        {
+            self.map(g)
+        }
+    }
+
+    // Impl for std::iter::FlatMap<I, F>
+
+    impl<A, B, I, U, F> Functor<B> for std::iter::FlatMap<I, U, F>
+    where
+        I: Iterator<Item = A>,
+        U: Iterator<Item = B>,
+        F: Fn(A) -> U + Clone,
+    {
+        type Map<V, G> = std::iter::Map<Self, G>
+        where
+            G: Fn(B) -> V + Clone;
+
+        #[inline(always)]
+        fn fmap<V, G>(self, g: G) -> std::iter::Map<Self, G>
+        where
+            G: Fn(B) -> V + Clone,
+        {
+            self.map(g)
+        }
+
+        #[inline(always)]
+        fn fmap1<G>(self, g: G) -> std::iter::Map<Self, G>
         where
             G: Fn(B) -> B + Clone,
         {
@@ -158,5 +187,21 @@ mod tests {
 
         let v = vec![1, 2, 3];
         assert_eq!(v.iter().fmap(&|x| x + 1).collect::<Vec<_>>(), vec![2, 3, 4]);
+    }
+
+    #[test]
+    fn test_map_functor() {
+        // let it0 = Vec::new().into_iter();
+        fn f0(x: i32) -> i32 {
+            x + 1
+        }
+
+        let f0_ = |x: i32| x + 1;
+
+        let map0 = Vec::new().into_iter().map(f0);
+        let map1 = vec![1, 2, 3].into_iter().map(f0_);
+
+        assert_eq!(map0.fmap(|x| x + 1).collect::<Vec<_>>(), Vec::new());
+        assert_eq!(map1.fmap(|x| x + 1).collect::<Vec<_>>(), vec![3, 4, 5]);
     }
 }

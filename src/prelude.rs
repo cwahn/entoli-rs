@@ -109,7 +109,7 @@ mod tests {
     #[test]
     fn test_filter_1() {
         let xs = vec![1, -2, 3, -4, 5];
-        let mut ys: Vec<i32> = filter(|x| *x > 0, xs).collect();
+        let ys: Vec<i32> = filter(|x| *x > 0, xs).collect();
 
         assert_eq!(ys, vec![1, 3, 5]);
     }
