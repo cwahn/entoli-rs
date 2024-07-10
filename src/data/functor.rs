@@ -84,38 +84,12 @@ mod tests {
     //     }
     // }
 
-    // Impl for std::iter::Map<I, F>
-
-    impl<I, A, B, F> Functor<B> for iter::Map<I, F>
-    where
-        I: Iterator<Item = A>,
-        F: Fn(A) -> B + Clone,
-    {
-        type Map<C, G> = iter::Map<Self, G>
-        where
-            G: Fn(B) -> C + Clone;
-
-        fn fmap<C, G>(self, g: G) -> iter::Map<Self, G>
-        where
-            G: Fn(B) -> C + Clone,
-        {
-            self.map(g)
-        }
-
-        fn fmap1<G>(self, g: G) -> iter::Map<Self, G>
-        where
-            G: Fn(B) -> B + Clone,
-        {
-            self.map(g)
-        }
-    }
-
     // Impl for std::slice::Iter<'a, A>
 
     impl<'a, A> Functor<&'a A> for std::slice::Iter<'a, A> {
         type Map<B, F> = std::iter::Map<Self, F>
-        where
-            F: Fn(&'a A) -> B + Clone;
+            where
+                F: Fn(&'a A) -> B + Clone;
 
         fn fmap<B, F>(self, f: F) -> std::iter::Map<Self, F>
         where
@@ -132,11 +106,39 @@ mod tests {
         }
     }
 
-    // #[test]
-    // fn test_option_functor() {
-    //     assert_eq!(None.fmap(&|x: i32| x + 1), None);
-    //     assert_eq!(Some(1).fmap(&|x: i32| x + 1), Some(2));
-    // }
+    // Impl for std::iter::Map<I, F>
+
+    impl<I, A, B, F> Functor<B> for iter::Map<I, F>
+    where
+        I: Iterator<Item = A>,
+        F: Fn(A) -> B + Clone,
+    {
+        type Map<C, G> = iter::Map<Self, G>
+        where
+            G: Fn(B) -> C + Clone;
+
+        #[inline(always)]
+        fn fmap<C, G>(self, g: G) -> iter::Map<Self, G>
+        where
+            G: Fn(B) -> C + Clone,
+        {
+            self.map(g)
+        }
+
+        #[inline(always)]
+        fn fmap1<G>(self, g: G) -> iter::Map<Self, G>
+        where
+            G: Fn(B) -> B + Clone,
+        {
+            self.map(g)
+        }
+    }
+
+    #[test]
+    fn test_option_functor() {
+        assert_eq!(None.fmap(&|x: i32| x + 1), None);
+        assert_eq!(Some(1).fmap(&|x: i32| x + 1), Some(2));
+    }
 
     #[test]
     fn test_iterator_functor() {
