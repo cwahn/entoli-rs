@@ -5,17 +5,9 @@ pub trait Functor<A>: Sized {
     where
         F: Fn(A) -> B + Clone;
 
-    // fn fmap<B, F>(self, f: &F) -> Self::Of<B>
-    // where
-    //     F: Fn(Self::HktOf1) -> B;
-
     fn fmap<B, F>(self, f: F) -> Self::Map<B, F>
     where
         F: Fn(A) -> B + Clone;
-
-    // fn fmap1<F>(self, f: &F) -> Self
-    // where
-    //     F: Fn(Self::HktOf1) -> Self::HktOf1;
 
     fn fmap1<F>(self, f: F) -> Self::Map<A, F>
     where
@@ -61,28 +53,6 @@ mod tests {
     // ! If I do this I can not implement Functor trait for any external type.
 
     // impl<A, I> Functor<A> for I
-    // where
-    //     I: Iterator<Item = A>,
-    // {
-    //     type Map<B, F> = iter::Map<I, F>
-    //     where
-    //         F: Fn(A) -> B + Clone;
-
-    //     fn fmap<B, F>(self, f: &F) -> iter::Map<Self, F>
-    //     where
-    //         F: Fn(A) -> B + Clone,
-    //     {
-    //         // ! Fmap could be possibly lazy. Should take ownership of f.
-    //         self.map(f.clone())
-    //     }
-
-    //     fn fmap1<F>(self, f: &F) -> iter::Map<Self, F>
-    //     where
-    //         F: Fn(A) -> A + Clone,
-    //     {
-    //         self.map(f.clone())
-    //     }
-    // }
 
     // Impl for std::vec::IntoIter<A>
 

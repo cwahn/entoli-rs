@@ -123,14 +123,6 @@ impl<A> Functor<A> for Tree<A> {
     where
         F: Fn(A) -> B + Clone,
     {
-        // Tree {
-        //     value: f(self.value),
-        //     children: self
-        //         .children
-        //         .into_iter()
-        //         .map(|child| child.fmap(f))
-        //         .collect(),
-        // }
         self.fmap_ref(&f)
     }
 
