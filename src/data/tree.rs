@@ -45,6 +45,20 @@ impl<T> Tree<T> {
         f_mut(&mut self.value);
         self.children.iter_mut().for_each(|c| c.update(f_mut));
     }
+
+    fn fmap_ref<B, F>(self, f: &F) -> Tree<B>
+    where
+        F: Fn(T) -> B + Clone,
+    {
+        Tree {
+            value: f(self.value),
+            children: self
+                .children
+                .into_iter()
+                .map(|child| child.fmap_ref(f))
+                .collect(),
+        }
+    }
 }
 
 // Implement Iterator for TreeIter
@@ -101,23 +115,26 @@ impl<T> Hkt1 for Tree<T> {
 }
 
 impl<A> Functor<A> for Tree<A> {
-    type Map<B, F> = Tree<B>;
-
-    fn fmap<B, F>(self, f: &F) -> Tree<B>
+    type Map<B, F> = Tree<B>
     where
-        F: Fn(A) -> B,
+        F: Fn(A) -> B + Clone;
+
+    fn fmap<B, F>(self, f: F) -> Tree<B>
+    where
+        F: Fn(A) -> B + Clone,
     {
-        Tree {
-            value: f(self.value),
-            children: self
-                .children
-                .into_iter()
-                .map(|child| child.fmap(f))
-                .collect(),
-        }
+        // Tree {
+        //     value: f(self.value),
+        //     children: self
+        //         .children
+        //         .into_iter()
+        //         .map(|child| child.fmap(f))
+        //         .collect(),
+        // }
+        self.fmap_ref(&f)
     }
 
-    fn fmap1<F>(mut self, f: &F) -> Self
+    fn fmap1<F>(mut self, f: F) -> Self
     where
         F: Fn(A) -> A,
     {

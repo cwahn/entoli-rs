@@ -1,37 +1,43 @@
 use crate::base::hkt::Hkt1;
 
 pub trait Functor<A>: Sized {
-    type Map<T, F>: Functor<T>;
+    type Map<B, F>: Functor<B>
+    where
+        F: Fn(A) -> B + Clone;
 
     // fn fmap<B, F>(self, f: &F) -> Self::Of<B>
     // where
     //     F: Fn(Self::HktOf1) -> B;
 
-    fn fmap<B, F>(self, f: &F) -> Self::Map<B, F>
+    fn fmap<B, F>(self, f: F) -> Self::Map<B, F>
     where
-        F: Fn(A) -> B;
+        F: Fn(A) -> B + Clone;
 
     // fn fmap1<F>(self, f: &F) -> Self
     // where
     //     F: Fn(Self::HktOf1) -> Self::HktOf1;
 
-    fn fmap1<F>(self, f: &F) -> Self
+    fn fmap1<F>(self, f: F) -> Self::Map<A, F>
     where
-        F: Fn(A) -> A;
+        F: Fn(A) -> A + Clone;
 }
 
 #[cfg(test)]
 mod tests {
 
-    use super::*;
-    use crate::impl_hkt1;
+    use std::iter;
 
-    impl_hkt1!(Option);
+    use super::*;
+    // use crate::impl_hkt1;
+
+    // impl_hkt1!(Option);
 
     impl<A> Functor<A> for Option<A> {
-        type Map<B, F> = Option<B>;
+        type Map<B, F> = Option<B>
+        where
+            F: Fn(A) -> B + Clone;
 
-        fn fmap<B, F>(self, f: &F) -> Option<B>
+        fn fmap<B, F>(self, f: F) -> Option<B>
         where
             F: Fn(A) -> B,
         {
@@ -41,7 +47,7 @@ mod tests {
             }
         }
 
-        fn fmap1<F>(self, f: &F) -> Option<A>
+        fn fmap1<F>(self, f: F) -> Option<A>
         where
             F: Fn(A) -> A,
         {
@@ -52,9 +58,89 @@ mod tests {
         }
     }
 
+    // ! If I do this I can not implement Functor trait for any external type.
+
+    // impl<A, I> Functor<A> for I
+    // where
+    //     I: Iterator<Item = A>,
+    // {
+    //     type Map<B, F> = iter::Map<I, F>
+    //     where
+    //         F: Fn(A) -> B + Clone;
+
+    //     fn fmap<B, F>(self, f: &F) -> iter::Map<Self, F>
+    //     where
+    //         F: Fn(A) -> B + Clone,
+    //     {
+    //         // ! Fmap could be possibly lazy. Should take ownership of f.
+    //         self.map(f.clone())
+    //     }
+
+    //     fn fmap1<F>(self, f: &F) -> iter::Map<Self, F>
+    //     where
+    //         F: Fn(A) -> A + Clone,
+    //     {
+    //         self.map(f.clone())
+    //     }
+    // }
+
+    // Impl for std::iter::Map<I, F>
+
+    impl<I, A, B, F> Functor<B> for iter::Map<I, F>
+    where
+        I: Iterator<Item = A>,
+        F: Fn(A) -> B + Clone,
+    {
+        type Map<C, G> = iter::Map<Self, G>
+        where
+            G: Fn(B) -> C + Clone;
+
+        fn fmap<C, G>(self, g: G) -> iter::Map<Self, G>
+        where
+            G: Fn(B) -> C + Clone,
+        {
+            self.map(g)
+        }
+
+        fn fmap1<G>(self, g: G) -> iter::Map<Self, G>
+        where
+            G: Fn(B) -> B + Clone,
+        {
+            self.map(g)
+        }
+    }
+
+    // Impl for std::slice::Iter<'a, A>
+
+    impl<'a, A> Functor<&'a A> for std::slice::Iter<'a, A> {
+        type Map<B, F> = std::iter::Map<Self, F>
+        where
+            F: Fn(&'a A) -> B + Clone;
+
+        fn fmap<B, F>(self, f: F) -> std::iter::Map<Self, F>
+        where
+            F: Fn(&'a A) -> B + Clone,
+        {
+            self.map(f)
+        }
+
+        fn fmap1<F>(self, f: F) -> std::iter::Map<Self, F>
+        where
+            F: Fn(&'a A) -> &'a A + Clone, // ?! Can I implement this for reference type?
+        {
+            self.map(f)
+        }
+    }
+
+    // #[test]
+    // fn test_option_functor() {
+    //     assert_eq!(None.fmap(&|x: i32| x + 1), None);
+    //     assert_eq!(Some(1).fmap(&|x: i32| x + 1), Some(2));
+    // }
+
     #[test]
-    fn test_option_functor() {
-        assert_eq!(None.fmap(&|x: i32| x + 1), None);
-        assert_eq!(Some(1).fmap(&|x: i32| x + 1), Some(2));
+    fn test_iterator_functor() {
+        let v = vec![1, 2, 3];
+        assert_eq!(v.iter().fmap(&|x| x + 1).collect::<Vec<_>>(), vec![2, 3, 4]);
     }
 }
