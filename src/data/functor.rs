@@ -84,6 +84,28 @@ mod tests {
     //     }
     // }
 
+    // Impl for std::vec::IntoIter<A>
+
+    impl<A> Functor<A> for std::vec::IntoIter<A> {
+        type Map<B, F> = std::iter::Map<Self, F>
+            where
+                F: Fn(A) -> B + Clone;
+
+        fn fmap<B, F>(self, f: F) -> std::iter::Map<Self, F>
+        where
+            F: Fn(A) -> B + Clone,
+        {
+            self.map(f)
+        }
+
+        fn fmap1<F>(self, f: F) -> std::iter::Map<Self, F>
+        where
+            F: Fn(A) -> A + Clone,
+        {
+            self.map(f)
+        }
+    }
+
     // Impl for std::slice::Iter<'a, A>
 
     impl<'a, A> Functor<&'a A> for std::slice::Iter<'a, A> {
@@ -141,7 +163,29 @@ mod tests {
     }
 
     #[test]
-    fn test_iterator_functor() {
+    fn test_vec_into_iter_functor() {
+        assert_eq!(
+            Vec::new()
+                .into_iter()
+                .fmap(&|x: i32| x + 1)
+                .collect::<Vec<_>>(),
+            Vec::new()
+        );
+
+        let v = vec![1, 2, 3];
+        assert_eq!(
+            v.into_iter().fmap(&|x| x + 1).collect::<Vec<_>>(),
+            vec![2, 3, 4]
+        );
+    }
+
+    #[test]
+    fn test_iter_functor() {
+        assert_eq!(
+            [].iter().fmap(&|x: &i32| x + 1).collect::<Vec<_>>(),
+            Vec::new()
+        );
+
         let v = vec![1, 2, 3];
         assert_eq!(v.iter().fmap(&|x| x + 1).collect::<Vec<_>>(), vec![2, 3, 4]);
     }
