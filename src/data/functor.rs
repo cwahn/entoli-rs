@@ -21,6 +21,7 @@ mod tests {
 
     use super::*;
     // use crate::impl_hkt1;
+    use crate::base::hkt::HktIter;
 
     // impl_hkt1!(Option);
 
@@ -52,23 +53,22 @@ mod tests {
 
     // ! If I do this I can not implement Functor trait for any external type.
 
-    // impl<A, I> Functor<A> for I
+    impl<A, I> Functor<A> for I
+    where
+        I: HktIter + Iterator<Item = A>,
+    {
+        type Map<B, F> = iter::Map<I, F>
+        where
+            F: Fn(A) -> B + Clone;
 
-    // Impl for std::vec::IntoIter<A>
-
-    impl<A> Functor<A> for std::vec::IntoIter<A> {
-        type Map<B, F> = std::iter::Map<Self, F>
-            where
-                F: Fn(A) -> B + Clone;
-
-        fn fmap<B, F>(self, f: F) -> std::iter::Map<Self, F>
+        fn fmap<B, F>(self, f: F) -> iter::Map<I, F>
         where
             F: Fn(A) -> B + Clone,
         {
             self.map(f)
         }
 
-        fn fmap1<F>(self, f: F) -> std::iter::Map<Self, F>
+        fn fmap1<F>(self, f: F) -> iter::Map<I, F>
         where
             F: Fn(A) -> A + Clone,
         {
@@ -76,84 +76,123 @@ mod tests {
         }
     }
 
-    // Impl for std::slice::Iter<'a, A>
-
-    impl<'a, A> Functor<&'a A> for std::slice::Iter<'a, A> {
-        type Map<B, F> = std::iter::Map<Self, F>
-            where
-                F: Fn(&'a A) -> B + Clone;
-
-        fn fmap<B, F>(self, f: F) -> std::iter::Map<Self, F>
-        where
-            F: Fn(&'a A) -> B + Clone,
-        {
-            self.map(f)
-        }
-
-        fn fmap1<F>(self, f: F) -> std::iter::Map<Self, F>
-        where
-            F: Fn(&'a A) -> &'a A + Clone, // ?! Can I implement this for reference type?
-        {
-            self.map(f)
-        }
-    }
-
-    // Impl for std::iter::Map<I, F>
-
-    impl<I, A, B, F> Functor<B> for std::iter::Map<I, F>
+    impl<T> HktIter for std::vec::IntoIter<T> {}
+    impl<'a, T> HktIter for std::slice::Iter<'a, T> {}
+    impl<T, B, F> HktIter for std::iter::Map<T, F>
     where
-        I: Iterator<Item = A>,
-        F: Fn(A) -> B + Clone,
+        T: Iterator,
+        F: Fn(T::Item) -> B + Clone,
     {
-        type Map<C, G> = std::iter::Map<Self, G>
-        where
-            G: Fn(B) -> C + Clone;
-
-        #[inline(always)]
-        fn fmap<C, G>(self, g: G) -> std::iter::Map<Self, G>
-        where
-            G: Fn(B) -> C + Clone,
-        {
-            self.map(g)
-        }
-
-        #[inline(always)]
-        fn fmap1<G>(self, g: G) -> std::iter::Map<Self, G>
-        where
-            G: Fn(B) -> B + Clone,
-        {
-            self.map(g)
-        }
     }
 
-    // Impl for std::iter::FlatMap<I, F>
-
-    impl<A, B, I, U, F> Functor<B> for std::iter::FlatMap<I, U, F>
+    impl<A, B, I, U, F> HktIter for std::iter::FlatMap<I, U, F>
     where
         I: Iterator<Item = A>,
         U: Iterator<Item = B>,
         F: Fn(A) -> U + Clone,
     {
-        type Map<V, G> = std::iter::Map<Self, G>
-        where
-            G: Fn(B) -> V + Clone;
-
-        #[inline(always)]
-        fn fmap<V, G>(self, g: G) -> std::iter::Map<Self, G>
-        where
-            G: Fn(B) -> V + Clone,
-        {
-            self.map(g)
-        }
-
-        #[inline(always)]
-        fn fmap1<G>(self, g: G) -> std::iter::Map<Self, G>
-        where
-            G: Fn(B) -> B + Clone,
-        {
-            self.map(g)
-        }
     }
+
+    // // Impl for std::vec::IntoIter<A>
+
+    // impl<A> Functor<A> for std::vec::IntoIter<A> {
+    //     type Map<B, F> = std::iter::Map<Self, F>
+    //         where
+    //             F: Fn(A) -> B + Clone;
+
+    //     fn fmap<B, F>(self, f: F) -> std::iter::Map<Self, F>
+    //     where
+    //         F: Fn(A) -> B + Clone,
+    //     {
+    //         self.map(f)
+    //     }
+
+    //     fn fmap1<F>(self, f: F) -> std::iter::Map<Self, F>
+    //     where
+    //         F: Fn(A) -> A + Clone,
+    //     {
+    //         self.map(f)
+    //     }
+    // }
+
+    // // Impl for std::slice::Iter<'a, A>
+
+    // impl<'a, A> Functor<&'a A> for std::slice::Iter<'a, A> {
+    //     type Map<B, F> = std::iter::Map<Self, F>
+    //         where
+    //             F: Fn(&'a A) -> B + Clone;
+
+    //     fn fmap<B, F>(self, f: F) -> std::iter::Map<Self, F>
+    //     where
+    //         F: Fn(&'a A) -> B + Clone,
+    //     {
+    //         self.map(f)
+    //     }
+
+    //     fn fmap1<F>(self, f: F) -> std::iter::Map<Self, F>
+    //     where
+    //         F: Fn(&'a A) -> &'a A + Clone, // ?! Can I implement this for reference type?
+    //     {
+    //         self.map(f)
+    //     }
+    // }
+
+    // // Impl for std::iter::Map<I, F>
+
+    // impl<I, A, B, F> Functor<B> for std::iter::Map<I, F>
+    // where
+    //     I: Iterator<Item = A>,
+    //     F: Fn(A) -> B + Clone,
+    // {
+    //     type Map<C, G> = std::iter::Map<Self, G>
+    //     where
+    //         G: Fn(B) -> C + Clone;
+
+    //     #[inline(always)]
+    //     fn fmap<C, G>(self, g: G) -> std::iter::Map<Self, G>
+    //     where
+    //         G: Fn(B) -> C + Clone,
+    //     {
+    //         self.map(g)
+    //     }
+
+    //     #[inline(always)]
+    //     fn fmap1<G>(self, g: G) -> std::iter::Map<Self, G>
+    //     where
+    //         G: Fn(B) -> B + Clone,
+    //     {
+    //         self.map(g)
+    //     }
+    // }
+
+    // // Impl for std::iter::FlatMap<I, F>
+
+    // impl<A, B, I, U, F> Functor<B> for std::iter::FlatMap<I, U, F>
+    // where
+    //     I: Iterator<Item = A>,
+    //     U: Iterator<Item = B>,
+    //     F: Fn(A) -> U + Clone,
+    // {
+    //     type Map<V, G> = std::iter::Map<Self, G>
+    //     where
+    //         G: Fn(B) -> V + Clone;
+
+    //     #[inline(always)]
+    //     fn fmap<V, G>(self, g: G) -> std::iter::Map<Self, G>
+    //     where
+    //         G: Fn(B) -> V + Clone,
+    //     {
+    //         self.map(g)
+    //     }
+
+    //     #[inline(always)]
+    //     fn fmap1<G>(self, g: G) -> std::iter::Map<Self, G>
+    //     where
+    //         G: Fn(B) -> B + Clone,
+    //     {
+    //         self.map(g)
+    //     }
+    // }
 
     #[test]
     fn test_option_functor() {

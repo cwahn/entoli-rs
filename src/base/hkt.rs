@@ -51,3 +51,5 @@ macro_rules! impl_hkt2 {
 
 //     type Of<W1> = impl Iterator<Item = W1>;
 // }
+
+pub trait HktIter: Iterator {}
