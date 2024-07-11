@@ -21,6 +21,7 @@ mod tests {
 
     use super::*;
     // use crate::impl_hkt1;
+    // ? Only needed for endo functor on family of types
     use crate::base::hkt::HktIter;
 
     // impl_hkt1!(Option);
@@ -78,6 +79,7 @@ mod tests {
 
     impl<T> HktIter for std::vec::IntoIter<T> {}
     impl<'a, T> HktIter for std::slice::Iter<'a, T> {}
+    impl<T> HktIter for std::iter::Once<T> {}
     impl<T, B, F> HktIter for std::iter::Map<T, F>
     where
         T: Iterator,
