@@ -114,21 +114,42 @@ impl<T> Hkt1 for Tree<T> {
     // type Of<W1> = Tree<W1>;
 }
 
-impl<A> Functor<A> for Tree<A> {
+// impl<A> Functor<A> for Tree<A> {
+//     type Map<B, F> = Tree<B>
+//     where
+//         F: Fn(A) -> B + Clone;
+
+//     fn fmap<B, F>(self, f: F) -> Tree<B>
+//     where
+//         F: Fn(A) -> B + Clone,
+//     {
+//         self.fmap_ref(&f)
+//     }
+
+//     fn fmap1<F>(mut self, f: F) -> Self
+//     where
+//         F: Fn(A) -> A,
+//     {
+//         self.update(&in_place(f));
+//         self
+//     }
+// }
+
+impl<T> Functor for Tree<T> {
     type Map<B, F> = Tree<B>
     where
-        F: Fn(A) -> B + Clone;
+        F: Fn(T) -> B + Clone;
 
     fn fmap<B, F>(self, f: F) -> Tree<B>
     where
-        F: Fn(A) -> B + Clone,
+        F: Fn(T) -> B + Clone,
     {
         self.fmap_ref(&f)
     }
 
     fn fmap1<F>(mut self, f: F) -> Self
     where
-        F: Fn(A) -> A,
+        F: Fn(T) -> T,
     {
         self.update(&in_place(f));
         self

@@ -1,17 +1,31 @@
 use crate::base::hkt::Hkt1;
 
-pub trait Functor<A>: Sized {
-    type Map<B, F>: Functor<B>
+// pub trait Functor<A>: Sized {
+//     type Map<B, F>: Functor<B>
+//     where
+//         F: Fn(A) -> B + Clone;
+
+//     fn fmap<B, F>(self, f: F) -> Self::Map<B, F>
+//     where
+//         F: Fn(A) -> B + Clone;
+
+//     fn fmap1<F>(self, f: F) -> Self::Map<A, F>
+//     where
+//         F: Fn(A) -> A + Clone;
+// }
+
+pub trait Functor: Hkt1 + Sized {
+    type Map<B, F>: Functor
     where
-        F: Fn(A) -> B + Clone;
+        F: Fn(Self::HktOf1) -> B + Clone;
 
     fn fmap<B, F>(self, f: F) -> Self::Map<B, F>
     where
-        F: Fn(A) -> B + Clone;
+        F: Fn(Self::HktOf1) -> B + Clone;
 
-    fn fmap1<F>(self, f: F) -> Self::Map<A, F>
+    fn fmap1<F>(self, f: F) -> Self::Map<Self::HktOf1, F>
     where
-        F: Fn(A) -> A + Clone;
+        F: Fn(Self::HktOf1) -> Self::HktOf1 + Clone;
 }
 
 #[cfg(test)]
@@ -20,56 +34,51 @@ mod tests {
     use std::iter;
 
     use super::*;
-    // use crate::impl_hkt1;
+    use crate::impl_hkt1;
     // ? Only needed for endo functor on family of types
     use crate::base::hkt::HktIter;
 
-    // impl_hkt1!(Option);
+    // impl<A> Functor<A> for Option<A> {
+    //     type Map<B, F> = Option<B>
+    //     where
+    //         F: Fn(A) -> B + Clone;
 
-    impl<A> Functor<A> for Option<A> {
+    //     fn fmap<B, F>(self, f: F) -> Option<B>
+    //     where
+    //         F: Fn(A) -> B,
+    //     {
+    //         match self {
+    //             Some(x) => Some(f(x)),
+    //             None => None,
+    //         }
+    //     }
+
+    //     fn fmap1<F>(self, f: F) -> Option<A>
+    //     where
+    //         F: Fn(A) -> A,
+    //     {
+    //         match self {
+    //             Some(x) => Some(f(x)),
+    //             None => None,
+    //         }
+    //     }
+    // }
+
+    impl_hkt1!(Option);
+
+    impl<A> Functor for Option<A> {
         type Map<B, F> = Option<B>
         where
             F: Fn(A) -> B + Clone;
 
         fn fmap<B, F>(self, f: F) -> Option<B>
         where
-            F: Fn(A) -> B,
-        {
-            match self {
-                Some(x) => Some(f(x)),
-                None => None,
-            }
-        }
-
-        fn fmap1<F>(self, f: F) -> Option<A>
-        where
-            F: Fn(A) -> A,
-        {
-            match self {
-                Some(x) => Some(f(x)),
-                None => None,
-            }
-        }
-    }
-
-    // ! If I do this I can not implement Functor trait for any external type.
-
-    impl<A, I> Functor<A> for I
-    where
-        I: HktIter + Iterator<Item = A>,
-    {
-        type Map<B, F> = iter::Map<I, F>
-        where
-            F: Fn(A) -> B + Clone;
-
-        fn fmap<B, F>(self, f: F) -> iter::Map<I, F>
-        where
             F: Fn(A) -> B + Clone,
         {
             self.map(f)
         }
 
-        fn fmap1<F>(self, f: F) -> iter::Map<I, F>
+        fn fmap1<F>(self, f: F) -> Option<A>
         where
             F: Fn(A) -> A + Clone,
         {
@@ -77,23 +86,48 @@ mod tests {
         }
     }
 
-    impl<T> HktIter for std::vec::IntoIter<T> {}
-    impl<'a, T> HktIter for std::slice::Iter<'a, T> {}
-    impl<T> HktIter for std::iter::Once<T> {}
-    impl<T, B, F> HktIter for std::iter::Map<T, F>
-    where
-        T: Iterator,
-        F: Fn(T::Item) -> B + Clone,
-    {
-    }
+    // ! If I do this I can not implement Functor trait for any external type.
 
-    impl<A, B, I, U, F> HktIter for std::iter::FlatMap<I, U, F>
-    where
-        I: Iterator<Item = A>,
-        U: Iterator<Item = B>,
-        F: Fn(A) -> U + Clone,
-    {
-    }
+    // impl<A, I> Functor<A> for I
+    // where
+    //     I: HktIter + Iterator<Item = A>,
+    // {
+    //     type Map<B, F> = iter::Map<I, F>
+    //     where
+    //         F: Fn(A) -> B + Clone;
+
+    //     fn fmap<B, F>(self, f: F) -> iter::Map<I, F>
+    //     where
+    //         F: Fn(A) -> B + Clone,
+    //     {
+    //         self.map(f)
+    //     }
+
+    //     fn fmap1<F>(self, f: F) -> iter::Map<I, F>
+    //     where
+    //         F: Fn(A) -> A + Clone,
+    //     {
+    //         self.map(f)
+    //     }
+    // }
+
+    // impl<T> HktIter for std::vec::IntoIter<T> {}
+    // impl<'a, T> HktIter for std::slice::Iter<'a, T> {}
+    // impl<T> HktIter for std::iter::Once<T> {}
+    // impl<T, B, F> HktIter for std::iter::Map<T, F>
+    // where
+    //     T: Iterator,
+    //     F: Fn(T::Item) -> B + Clone,
+    // {
+    // }
+
+    // impl<A, B, I, U, F> HktIter for std::iter::FlatMap<I, U, F>
+    // where
+    //     I: Iterator<Item = A>,
+    //     U: Iterator<Item = B>,
+    //     F: Fn(A) -> U + Clone,
+    // {
+    // }
 
     // // Impl for std::vec::IntoIter<A>
 
@@ -202,47 +236,47 @@ mod tests {
         assert_eq!(Some(1).fmap(&|x: i32| x + 1), Some(2));
     }
 
-    #[test]
-    fn test_vec_into_iter_functor() {
-        assert_eq!(
-            Vec::new()
-                .into_iter()
-                .fmap(&|x: i32| x + 1)
-                .collect::<Vec<_>>(),
-            Vec::new()
-        );
+    // #[test]
+    // fn test_vec_into_iter_functor() {
+    //     assert_eq!(
+    //         Vec::new()
+    //             .into_iter()
+    //             .fmap(&|x: i32| x + 1)
+    //             .collect::<Vec<_>>(),
+    //         Vec::new()
+    //     );
 
-        let v = vec![1, 2, 3];
-        assert_eq!(
-            v.into_iter().fmap(&|x| x + 1).collect::<Vec<_>>(),
-            vec![2, 3, 4]
-        );
-    }
+    //     let v = vec![1, 2, 3];
+    //     assert_eq!(
+    //         v.into_iter().fmap(&|x| x + 1).collect::<Vec<_>>(),
+    //         vec![2, 3, 4]
+    //     );
+    // }
 
-    #[test]
-    fn test_iter_functor() {
-        assert_eq!(
-            [].iter().fmap(&|x: &i32| x + 1).collect::<Vec<_>>(),
-            Vec::new()
-        );
+    // #[test]
+    // fn test_iter_functor() {
+    //     assert_eq!(
+    //         [].iter().fmap(&|x: &i32| x + 1).collect::<Vec<_>>(),
+    //         Vec::new()
+    //     );
 
-        let v = vec![1, 2, 3];
-        assert_eq!(v.iter().fmap(&|x| x + 1).collect::<Vec<_>>(), vec![2, 3, 4]);
-    }
+    //     let v = vec![1, 2, 3];
+    //     assert_eq!(v.iter().fmap(&|x| x + 1).collect::<Vec<_>>(), vec![2, 3, 4]);
+    // }
 
-    #[test]
-    fn test_map_functor() {
-        // let it0 = Vec::new().into_iter();
-        fn f0(x: i32) -> i32 {
-            x + 1
-        }
+    // #[test]
+    // fn test_map_functor() {
+    //     // let it0 = Vec::new().into_iter();
+    //     fn f0(x: i32) -> i32 {
+    //         x + 1
+    //     }
 
-        let f0_ = |x: i32| x + 1;
+    //     let f0_ = |x: i32| x + 1;
 
-        let map0 = Vec::new().into_iter().map(f0);
-        let map1 = vec![1, 2, 3].into_iter().map(f0_);
+    //     let map0 = Vec::new().into_iter().map(f0);
+    //     let map1 = vec![1, 2, 3].into_iter().map(f0_);
 
-        assert_eq!(map0.fmap(|x| x + 1).collect::<Vec<_>>(), Vec::new());
-        assert_eq!(map1.fmap(|x| x + 1).collect::<Vec<_>>(), vec![3, 4, 5]);
-    }
+    //     assert_eq!(map0.fmap(|x| x + 1).collect::<Vec<_>>(), Vec::new());
+    //     assert_eq!(map1.fmap(|x| x + 1).collect::<Vec<_>>(), vec![3, 4, 5]);
+    // }
 }
