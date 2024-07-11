@@ -50,31 +50,30 @@ use super::functor::Functor;
 
 pub trait Applicative<A>: Functor<A> {
     type Pure<T>: Applicative<T>;
+    type Af<B, F>: Applicative<F>
+    where
+        F: Fn(A) -> B + Clone;
     type Ap<B, F>: Applicative<B>
     where
         F: Fn(A) -> B + Clone;
 
     fn pure(a: A) -> Self::Pure<A>;
 
-    fn apply<B, F, Af>(self, af: Af) -> Self::Ap<B, F>
+    fn apply<B, F>(self, af: Self::Af<B, F>) -> Self::Ap<B, F>
     where
-        F: Fn(A) -> B + Clone,
-        Af: Applicative<F>;
+        F: Fn(A) -> B + Clone;
 }
 
 #[cfg(test)]
 mod tests {
 
-    use crate::{
-        base::hkt::{HktIter, HktOption},
-        data::option::HktOption,
-    };
+    use crate::{base::hkt::HktIter, data::option::HktOption};
 
     use super::*;
 
     // impl<A> Applicative<A> for Option<A> {
     //     type Pure<T> = Option<T>;
-    //     // type Apf<B, F> = Option<F>
+    //     // type Af<B, F> = Option<F>
     //     // where
     //     //     F: Fn(A) -> B + Clone;
     //     type Ap<B, F> = Option<B>
@@ -85,7 +84,7 @@ mod tests {
     //         Some(a)
     //     }
 
-    //     // fn apply<B, F>(self, f: Self::Apf<B, F>) -> Self::Ap<B, F>
+    //     // fn apply<B, F>(self, f: Self::Af<B, F>) -> Self::Ap<B, F>
     //     fn apply<B, F, Af>(self, f: Af) -> Self::Ap<B, F>
     //     where
     //         F: Fn(A) -> B + Clone,
@@ -98,12 +97,11 @@ mod tests {
     //     }
     // }
 
-    impl<A, O> Applicative<A> for O
-    where
-        O: HktOption<Arg1 = A>,
-    {
-        type Pure<T> = Option<A>;
-
+    impl<A> Applicative<A> for Option<A> {
+        type Pure<T> = Option<T>;
+        type Af<B, F> = Option<F>
+        where
+            F: Fn(A) -> B + Clone;
         type Ap<B, F> = Option<B>
         where
             F: Fn(A) -> B + Clone;
@@ -112,62 +110,36 @@ mod tests {
             Some(a)
         }
 
-        // fn apply<B, F>(self, f: Self::Apf<B, F>) -> Self::Ap<B, F>
-        fn apply<B, F, Af>(self, af: Af) -> Self::Ap<B, F>
-        where
-            F: Fn(A) -> B + Clone,
-            Af: Applicative<F> + HktOption<Arg1 = F>,
-        {
-            self.fmap_or_else(&|| None, &|x| af.fmap_or_else(&|| None, &|f| Some(f(x))))
-        }
-    }
-
-    impl<A, I> Applicative<A> for I
-    where
-        I: HktIter + Iterator<Item = A>,
-    {
-        type Pure<T> = std::iter::Once<T>;
-        // type Apf<B, F> = std::iter::Map<I, F>
-        // where
-        //     F: Fn(A) -> B + Clone;
-        type Ap<B, F> =  std::iter::FlatMap<Self, std::iter::Map<std::vec::IntoIter<F>, F>, F>
-        where
-            F: Fn(A) -> B + Clone;
-
-        fn pure(a: A) -> Self::Pure<A> {
-            std::iter::once(a)
-        }
-
-        // fn apply<B, F>(self, f: Self::Apf<B, F>) -> Self::Ap<B, F>
-        fn apply<B, F, Af>(self, f: std::iter::Map<std::iter::Once<F>, F>) -> Self::Ap<B, F>
+        fn apply<B, F>(self, f: Self::Af<B, F>) -> Self::Ap<B, F>
         where
             F: Fn(A) -> B + Clone,
         {
-            // Cartesian product
-            self.flat_map(move |x| f.clone().map(move |f| f(x)))
-            // A -> List<B>
+            match (self, f) {
+                (Some(x), Some(f)) => Some(f(x)),
+                _ => None,
+            }
         }
     }
 
-    // Impl for std::vec::IntoIter<A>
-    // Map<std::vec::IntoIter<F>
-
-    // impl<A> Applicative<A> for std::vec::IntoIter<A> {
-    //     type Pure<T> = std::vec::IntoIter<T>;
-    //     type Apf<B, F> = std::vec::IntoIter<F>
-    //     where
-    //         F: Fn(A) -> B + Clone;
-
-    //     // FlatMap<std::vec::IntoIter<A>, Map<std::vec::IntoIter<F>, {closure@src/data/applicative.rs:120:50: 120:58}>, {closure@src/data/applicative.rs:120:27: 120:35}>
-    //     type Ap<B, F> = std::iter::FlatMap<Self, std::iter::Map<std::vec::IntoIter<F>, F>, F>
+    // ! No blancket impl
+    // impl<A, I> Applicative<A> for I
+    // where
+    //     I: HktIter + Iterator<Item = A>,
+    // {
+    //     type Pure<T> = std::iter::Once<T>;
+    //     // type Af<B, F> = std::iter::Map<I, F>
+    //     // where
+    //     //     F: Fn(A) -> B + Clone;
+    //     type Ap<B, F> =  std::iter::FlatMap<Self, std::iter::Map<std::vec::IntoIter<F>, F>, F>
     //     where
     //         F: Fn(A) -> B + Clone;
 
     //     fn pure(a: A) -> Self::Pure<A> {
-    //         vec![a].into_iter()
+    //         std::iter::once(a)
     //     }
 
-    //     fn apply<B, F>(self, f: Self::Apf<B, F>) -> Self::Ap<B, F>
+    //     // fn apply<B, F>(self, f: Self::Af<B, F>) -> Self::Ap<B, F>
+    //     fn apply<B, F, Af>(self, f: std::iter::Map<std::iter::Once<F>, F>) -> Self::Ap<B, F>
     //     where
     //         F: Fn(A) -> B + Clone,
     //     {
@@ -176,6 +148,33 @@ mod tests {
     //         // A -> List<B>
     //     }
     // }
+
+    // Impl for std::vec::IntoIter<A>
+    // Map<std::vec::IntoIter<F>
+
+    impl<A> Applicative<A> for std::vec::IntoIter<A> {
+        type Pure<T> = std::vec::IntoIter<T>;
+        type Af<B, F> = impl Applicative<F> + Iterator<Item = F> 
+        where
+            F: Fn(A) -> B + Clone;
+        // FlatMap<std::vec::IntoIter<A>, Map<std::vec::IntoIter<F>, {closure@src/data/applicative.rs:120:50: 120:58}>, {closure@src/data/applicative.rs:120:27: 120:35}>
+        type Ap<B, F> = std::iter::FlatMap<Self, std::iter::Map<std::vec::IntoIter<F>, F>, F>
+        where
+            F: Fn(A) -> B + Clone;
+
+        fn pure(a: A) -> Self::Pure<A> {
+            vec![a].into_iter()
+        }
+
+        fn apply<B, F>(self, f: Self::Af<B, F>) -> Self::Ap<B, F>
+        where
+            F: Fn(A) -> B + Clone,
+        {
+            // Cartesian product
+            self.flat_map(move |x| f.clone().map(move |f| f(x)))
+            // A -> List<B>
+        }
+    }
 
     #[test]
     fn test_applicative_pure() {
