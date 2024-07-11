@@ -53,22 +53,22 @@ macro_rules! impl_hkt2 {
 // }
 
 pub trait HktIter: Iterator {}
-pub trait HktOption<A> {
-    fn bimap<B, F, G>(self, f: F, g: G) -> Option<B>
-    where
-        F: Fn(A) -> B,
-        G: Fn() -> B;
-}
+// pub trait HktOption<A> {
+//     fn bimap<B, F, G>(self, f: F, g: G) -> Option<B>
+//     where
+//         F: Fn(A) -> B,
+//         G: Fn() -> B;
+// }
 
-impl<A> HktOption<A> for Option<A> {
-    fn bimap<B, F, G>(self, f: F, g: G) -> Option<B>
-    where
-        F: Fn(A) -> B,
-        G: Fn() -> B,
-    {
-        match self {
-            Some(x) => Some(f(x)),
-            None => Some(g()),
-        }
-    }
-}
+// impl<A> HktOption<A> for Option<A> {
+//     fn bimap<B, F, G>(self, f: F, g: G) -> Option<B>
+//     where
+//         F: Fn(A) -> B,
+//         G: Fn() -> B,
+//     {
+//         match self {
+//             Some(x) => Some(f(x)),
+//             None => Some(g()),
+//         }
+//     }
+// }

@@ -65,15 +65,45 @@ pub trait Applicative<A>: Functor<A> {
 #[cfg(test)]
 mod tests {
 
-    use crate::base::hkt::{HktIter, HktOption};
+    use crate::{
+        base::hkt::{HktIter, HktOption},
+        data::option::HktOption,
+    };
 
     use super::*;
 
-    impl<A> Applicative<A> for Option<A> {
-        type Pure<T> = Option<T>;
-        // type Apf<B, F> = Option<F>
-        // where
-        //     F: Fn(A) -> B + Clone;
+    // impl<A> Applicative<A> for Option<A> {
+    //     type Pure<T> = Option<T>;
+    //     // type Apf<B, F> = Option<F>
+    //     // where
+    //     //     F: Fn(A) -> B + Clone;
+    //     type Ap<B, F> = Option<B>
+    //     where
+    //         F: Fn(A) -> B + Clone;
+
+    //     fn pure(a: A) -> Self::Pure<A> {
+    //         Some(a)
+    //     }
+
+    //     // fn apply<B, F>(self, f: Self::Apf<B, F>) -> Self::Ap<B, F>
+    //     fn apply<B, F, Af>(self, f: Af) -> Self::Ap<B, F>
+    //     where
+    //         F: Fn(A) -> B + Clone,
+    //         Af: Applicative<F> + HktOption<F>,
+    //     {
+    //         match (self, f) {
+    //             (Some(x), Some(f)) => Some(f(x)),
+    //             _ => None,
+    //         }
+    //     }
+    // }
+
+    impl<A, O> Applicative<A> for O
+    where
+        O: HktOption<Arg1 = A>,
+    {
+        type Pure<T> = Option<A>;
+
         type Ap<B, F> = Option<B>
         where
             F: Fn(A) -> B + Clone;
@@ -83,15 +113,12 @@ mod tests {
         }
 
         // fn apply<B, F>(self, f: Self::Apf<B, F>) -> Self::Ap<B, F>
-        fn apply<B, F, Af>(self, f: Af) -> Self::Ap<B, F>
+        fn apply<B, F, Af>(self, af: Af) -> Self::Ap<B, F>
         where
             F: Fn(A) -> B + Clone,
-            Af: Applicative<F> + HktOption<F>,
+            Af: Applicative<F> + HktOption<Arg1 = F>,
         {
-            match (self, f) {
-                (Some(x), Some(f)) => Some(f(x)),
-                _ => None,
-            }
+            self.fmap_or_else(&|| None, &|x| af.fmap_or_else(&|| None, &|f| Some(f(x))))
         }
     }
 
