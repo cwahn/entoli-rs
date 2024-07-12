@@ -152,6 +152,21 @@ pub fn init<A>(xs: impl IntoIterator<Item = A>) -> impl Iterator<Item = A> {
     })
 }
 
+#[inline(always)]
+pub fn nth<A>(n: usize, xs: impl IntoIterator<Item = A>) -> Option<A> {
+    xs.into_iter().nth(n)
+}
+
+#[inline(always)]
+pub fn length<A>(xs: impl IntoIterator<Item = A>) -> usize {
+    xs.into_iter().count()
+}
+
+#[inline(always)]
+pub fn reverse<A>(xs: impl DoubleEndedIterator<Item = A>) -> Vec<A> {
+    xs.rev().collect()
+}
+
 // todo Io
 
 #[cfg(test)]
@@ -311,5 +326,26 @@ mod tests {
         assert_eq!(init(Vec::<i32>::new()).collect::<Vec<_>>(), Vec::new());
 
         assert_eq!(init(vec![1, 2, 3]).collect::<Vec<_>>(), vec![1, 2]);
+    }
+
+    #[test]
+    fn test_nth() {
+        assert_eq!(nth(0, Vec::<i32>::new()), None);
+
+        assert_eq!(nth(0, vec![1, 2, 3]), Some(1));
+    }
+
+    #[test]
+    fn test_length() {
+        assert_eq!(length(Vec::<i32>::new()), 0);
+
+        assert_eq!(length(vec![1, 2, 3]), 3);
+    }
+
+    #[test]
+    fn test_reverse() {
+        assert_eq!(reverse(Vec::<i32>::new().into_iter()), Vec::<i32>::new());
+
+        assert_eq!(reverse(vec![1, 2, 3].into_iter()), vec![3, 2, 1]);
     }
 }
