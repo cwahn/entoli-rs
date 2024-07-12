@@ -119,6 +119,39 @@ where
     xs.into_iter().filter(f)
 }
 
+#[inline(always)]
+pub fn head<A>(xs: impl IntoIterator<Item = A>) -> Option<A> {
+    xs.into_iter().next()
+}
+
+#[inline(always)]
+pub fn last<A>(xs: impl IntoIterator<Item = A>) -> Option<A> {
+    xs.into_iter().last()
+}
+
+#[inline(always)]
+pub fn tail<A>(xs: impl IntoIterator<Item = A>) -> impl Iterator<Item = A> {
+    let mut xs = xs.into_iter();
+    xs.next();
+    xs
+}
+
+#[inline(always)]
+pub fn init<A>(xs: impl IntoIterator<Item = A>) -> impl Iterator<Item = A> {
+    let mut xs = xs.into_iter();
+    let mut prev = xs.next();
+
+    std::iter::from_fn(move || {
+        if let Some(next) = xs.next() {
+            let result = prev.take();
+            prev = Some(next);
+            result
+        } else {
+            None
+        }
+    })
+}
+
 // todo Io
 
 #[cfg(test)]
@@ -253,20 +286,30 @@ mod tests {
     }
 
     #[test]
-    fn test_foldl_0() {
-        let xs = Vec::<i32>::new();
-        let acc = 0;
-        let sum = foldl(|acc, x| acc + x, acc, xs);
+    fn test_head() {
+        assert_eq!(head(Vec::<i32>::new()), None);
 
-        assert_eq!(sum, 0);
+        assert_eq!(head(vec![1, 2, 3]), Some(1));
     }
 
     #[test]
-    fn test_foldl_1() {
-        let xs = vec![1, 2, 3, 4, 5];
-        let acc = 0;
-        let sum = foldl(|acc, x| acc + x, acc, xs);
+    fn test_last() {
+        assert_eq!(last(Vec::<i32>::new()), None);
 
-        assert_eq!(sum, 15);
+        assert_eq!(last(vec![1, 2, 3]), Some(3));
+    }
+
+    #[test]
+    fn test_tail() {
+        assert_eq!(tail(Vec::<i32>::new()).collect::<Vec<_>>(), Vec::new());
+
+        assert_eq!(tail(vec![1, 2, 3]).collect::<Vec<_>>(), vec![2, 3]);
+    }
+
+    #[test]
+    fn test_init() {
+        assert_eq!(init(Vec::<i32>::new()).collect::<Vec<_>>(), Vec::new());
+
+        assert_eq!(init(vec![1, 2, 3]).collect::<Vec<_>>(), vec![1, 2]);
     }
 }
