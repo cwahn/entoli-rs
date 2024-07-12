@@ -320,6 +320,79 @@ where
     xs.into_iter().cycle()
 }
 
+// Sublists
+
+// todo take, drop, split_at, take_while, drop_while, span
+
+#[inline(always)]
+pub fn take<A, As>(n: usize, xs: As) -> std::iter::Take<<As as IntoIterator>::IntoIter>
+where
+    As: IntoIterator<Item = A>,
+{
+    xs.into_iter().take(n)
+}
+
+#[inline(always)]
+pub fn drop<A, As>(n: usize, xs: As) -> std::iter::Skip<<As as IntoIterator>::IntoIter>
+where
+    As: IntoIterator<Item = A>,
+{
+    xs.into_iter().skip(n)
+}
+
+#[inline(always)]
+pub fn take_while<A, As, F>(f: F, xs: As) -> std::iter::TakeWhile<<As as IntoIterator>::IntoIter, F>
+where
+    As: IntoIterator<Item = A>,
+    F: Fn(&A) -> bool,
+{
+    xs.into_iter().take_while(f)
+}
+
+#[inline(always)]
+pub fn drop_while<A, As, F>(f: F, xs: As) -> std::iter::SkipWhile<<As as IntoIterator>::IntoIter, F>
+where
+    As: IntoIterator<Item = A>,
+    F: Fn(&A) -> bool,
+{
+    xs.into_iter().skip_while(f)
+}
+
+#[inline(always)]
+pub fn span<A, As, F>(
+    f: F,
+    xs: As,
+) -> (
+    std::iter::TakeWhile<<As as IntoIterator>::IntoIter, F>,
+    std::iter::SkipWhile<<As as IntoIterator>::IntoIter, F>,
+)
+where
+    As: IntoIterator<Item = A>,
+    <As as IntoIterator>::IntoIter: Clone,
+    F: Fn(&A) -> bool + Clone,
+{
+    let iter = xs.into_iter();
+    (iter.clone().take_while(f.clone()), iter.skip_while(f))
+}
+
+#[inline(always)]
+pub fn split_at<A, As>(
+    n: usize,
+    xs: As,
+) -> (
+    std::iter::Take<<As as IntoIterator>::IntoIter>,
+    std::iter::Skip<<As as IntoIterator>::IntoIter>,
+)
+where
+    As: IntoIterator<Item = A>,
+    <As as IntoIterator>::IntoIter: Clone,
+{
+    let iter = xs.into_iter();
+    (iter.clone().take(n), iter.skip(n))
+}
+
+// No break since it is a keyword
+
 // todo Io
 
 #[cfg(test)]
@@ -596,4 +669,64 @@ mod tests {
             vec![1, 2, 3, 1, 2, 3, 1]
         );
     }
+
+    // Sublists
+
+    #[test]
+    fn test_take() {
+        assert_eq!(take(0, Vec::<i32>::new()).collect::<Vec<_>>(), Vec::new());
+
+        assert_eq!(take(2, vec![1, 2, 3]).collect::<Vec<_>>(), vec![1, 2]);
+    }
+
+    #[test]
+    fn test_drop() {
+        assert_eq!(drop(0, Vec::<i32>::new()).collect::<Vec<_>>(), Vec::new());
+
+        assert_eq!(drop(2, vec![1, 2, 3]).collect::<Vec<_>>(), vec![3]);
+    }
+
+    #[test]
+    fn test_take_while() {
+        assert_eq!(
+            take_while(|x| x < &3, Vec::<i32>::new()).collect::<Vec<_>>(),
+            Vec::new()
+        );
+
+        assert_eq!(
+            take_while(|x| x < &3, vec![1, 2, 3, 4, 5]).collect::<Vec<_>>(),
+            vec![1, 2]
+        );
+    }
+
+    #[test]
+    fn test_drop_while() {
+        assert_eq!(
+            drop_while(|x| x < &3, Vec::<i32>::new()).collect::<Vec<_>>(),
+            Vec::new()
+        );
+
+        assert_eq!(
+            drop_while(|x| x < &3, vec![1, 2, 3, 4, 5]).collect::<Vec<_>>(),
+            vec![3, 4, 5]
+        );
+    }
+
+    #[test]
+    fn test_span() {
+        let (xs, ys) = span(|x| x < &3, vec![1, 2, 3, 4, 5]);
+
+        assert_eq!(xs.collect::<Vec<_>>(), vec![1, 2]);
+        assert_eq!(ys.collect::<Vec<_>>(), vec![3, 4, 5]);
+    }
+
+    #[test]
+    fn test_split_at() {
+        let (xs, ys) = split_at(2, vec![1, 2, 3, 4, 5]);
+
+        assert_eq!(xs.collect::<Vec<_>>(), vec![1, 2]);
+        assert_eq!(ys.collect::<Vec<_>>(), vec![3, 4, 5]);
+    }
+
+    // No break since it is a keyword
 }
