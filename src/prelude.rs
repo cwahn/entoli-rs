@@ -424,6 +424,7 @@ where
     xs.into_iter().zip(ys).map(move |(a, b)| f(a, b))
 }
 
+#[inline(always)]
 pub fn unzip<A, B, FromA, FromB>(xs: impl IntoIterator<Item = (A, B)>) -> (FromA, FromB)
 where
     FromA: Default + Extend<A>,
@@ -438,6 +439,50 @@ where
     }
 
     (as_, bs)
+}
+
+// Functions on strings
+
+#[inline(always)]
+pub fn lines(s: &str) -> std::str::Lines {
+    s.lines()
+}
+
+#[inline(always)]
+pub fn words(s: &str) -> std::str::SplitWhitespace {
+    s.split_whitespace()
+}
+
+pub fn unlines<I>(lines: I) -> String
+where
+    I: IntoIterator,
+    I::Item: AsRef<str>,
+{
+    let mut result = lines.into_iter().fold(String::new(), |mut acc, line| {
+        acc.push_str(line.as_ref());
+        acc.push('\n');
+        acc
+    });
+
+    result.pop(); // Remove the trailing newline
+
+    result
+}
+
+pub fn unwords<I>(words: I) -> String
+where
+    I: IntoIterator,
+    I::Item: AsRef<str>,
+{
+    let mut result = words.into_iter().fold(String::new(), |mut acc, word| {
+        acc.push_str(word.as_ref());
+        acc.push(' ');
+        acc
+    });
+
+    result.pop(); // Remove the trailing space
+
+    result
 }
 
 // todo Io
@@ -797,6 +842,36 @@ mod tests {
 
         assert_eq!(xs, vec![1, 2, 3]);
         assert_eq!(ys, vec![4, 5, 6]);
+    }
+
+    // Functions on strings
+
+    #[test]
+    fn test_lines() {
+        assert_eq!(lines("").collect::<Vec<_>>(), Vec::<&str>::new());
+
+        assert_eq!(lines("a\nb\nc").collect::<Vec<_>>(), vec!["a", "b", "c"]);
+    }
+
+    #[test]
+    fn test_words() {
+        assert_eq!(words("").collect::<Vec<_>>(), Vec::<&str>::new());
+
+        assert_eq!(words("a b c").collect::<Vec<_>>(), vec!["a", "b", "c"]);
+    }
+
+    #[test]
+    fn test_unlines() {
+        assert_eq!(unlines(Vec::<&str>::new()), "");
+
+        assert_eq!(unlines(vec!["a", "b", "c"]), "a\nb\nc");
+    }
+
+    #[test]
+    fn test_unwords() {
+        assert_eq!(unwords(Vec::<&str>::new()), "");
+
+        assert_eq!(unwords(vec!["a", "b", "c"]), "a b c");
     }
 
     // No break since it is a keyword
