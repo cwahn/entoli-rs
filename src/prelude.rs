@@ -88,29 +88,36 @@ where
     xs.into_iter().all(|a| f(a))
 }
 
+// Miscellaneous functions
+
+pub fn id<A>(a: A) -> A {
+    a
+}
+
+// List operations
+
 #[inline(always)]
-pub fn map<'a, A, B, F>(f: F, xs: impl IntoIterator<Item = A>) -> impl Iterator<Item = B>
+pub fn map<A, B, F>(f: F, xs: impl IntoIterator<Item = A>) -> impl Iterator<Item = B>
 where
-    F: for<'b> Fn(&'b A) -> B,
+    F: Fn(A) -> B,
 {
-    xs.into_iter().map(move |a| f(&a))
+    xs.into_iter().map(f)
+}
+
+pub fn append<A>(
+    xs: impl IntoIterator<Item = A>,
+    ys: impl IntoIterator<Item = A>,
+) -> std::iter::Chain<impl IntoIterator<Item = A>, impl IntoIterator<Item = A>> {
+    xs.into_iter().chain(ys)
 }
 
 #[inline(always)]
-pub fn filter<'a, A, F>(f: F, xs: impl IntoIterator<Item = A>) -> impl Iterator<Item = A>
+pub fn filter<A, F>(f: F, xs: impl IntoIterator<Item = A>) -> impl Iterator<Item = A>
 where
-    F: for<'b> Fn(&'b A) -> bool,
+    F: Fn(&A) -> bool,
 {
-    xs.into_iter().filter(move |a| f(&a))
+    xs.into_iter().filter(f)
 }
-
-// #[inline(always)]
-// pub fn foldl<'a, A, B, F>(f: F, acc: B, xs: impl IntoIterator<Item = A>) -> B
-// where
-//     F: for<'b> Fn(B, &'b A) -> B,
-// {
-//     xs.into_iter().fold(acc, move |acc, a| f(acc, &a))
-// }
 
 // todo Io
 
@@ -187,6 +194,13 @@ mod tests {
 
         assert_eq!(all(|x| x > 0, vec![-1, -2, -3]), false);
         assert_eq!(all(|x| x > 0, vec![1, 2, 3]), true);
+    }
+
+    // Miscellaneous functions
+
+    #[test]
+    fn test_id() {
+        assert_eq!(id(1), 1);
     }
 
     #[test]
