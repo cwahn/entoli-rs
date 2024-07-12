@@ -33,6 +33,12 @@ where
 }
 
 // todo foldr
+// pub fn foldr<A, B, F>(f: F, acc: B, xs: impl DoubleEndedIterator<Item = A>) -> B
+// where
+//     F: Fn(A, B) -> B,
+// {
+//     xs.rev().fold(acc, move |acc, a| f(a, acc))
+// }
 
 pub fn elem<A>(x: A, xs: impl IntoIterator<Item = A>) -> bool
 where
@@ -97,23 +103,44 @@ pub fn id<A>(a: A) -> A {
 // List operations
 
 #[inline(always)]
-pub fn map<A, B, F>(f: F, xs: impl IntoIterator<Item = A>) -> impl Iterator<Item = B>
+pub fn map<A, As, B, F>(f: F, xs: As) -> std::iter::Map<<As as IntoIterator>::IntoIter, F>
 where
+    As: IntoIterator<Item = A>,
     F: Fn(A) -> B,
 {
     xs.into_iter().map(f)
 }
 
-pub fn append<A>(
-    xs: impl IntoIterator<Item = A>,
-    ys: impl IntoIterator<Item = A>,
-) -> impl IntoIterator<Item = A> {
+// pub fn append<A>(
+//     xs: impl IntoIterator<Item = A>,
+//     ys: impl IntoIterator<Item = A>,
+// ) -> impl IntoIterator<Item = A> {
+//     xs.into_iter().chain(ys.into_iter())
+// }
+
+pub fn append<A, As1, As2>(
+    xs: As1,
+    ys: As2,
+) -> std::iter::Chain<<As1 as IntoIterator>::IntoIter, <As2 as IntoIterator>::IntoIter>
+where
+    As1: IntoIterator<Item = A>,
+    As2: IntoIterator<Item = A>,
+{
     xs.into_iter().chain(ys.into_iter())
 }
 
+// #[inline(always)]
+// pub fn filter<A, F>(f: F, xs: impl IntoIterator<Item = A>) -> impl Iterator<Item = A>
+// where
+//     F: Fn(&A) -> bool,
+// {
+//     xs.into_iter().filter(f)
+// }
+
 #[inline(always)]
-pub fn filter<A, F>(f: F, xs: impl IntoIterator<Item = A>) -> impl Iterator<Item = A>
+pub fn filter<A, As, F>(f: F, xs: As) -> std::iter::Filter<<As as IntoIterator>::IntoIter, F>
 where
+    As: IntoIterator<Item = A>,
     F: Fn(&A) -> bool,
 {
     xs.into_iter().filter(f)
@@ -129,23 +156,32 @@ pub fn last<A>(xs: impl IntoIterator<Item = A>) -> Option<A> {
     xs.into_iter().last()
 }
 
+// #[inline(always)]
+// pub fn tail<A>(xs: impl IntoIterator<Item = A>) -> impl Iterator<Item = A> {
+//     let mut xs = xs.into_iter();
+//     xs.next();
+//     xs
+// }
+
 #[inline(always)]
-pub fn tail<A>(xs: impl IntoIterator<Item = A>) -> impl Iterator<Item = A> {
-    let mut xs = xs.into_iter();
-    xs.next();
-    xs
+pub fn tail<A, As>(xs: As) -> std::iter::Skip<<As as IntoIterator>::IntoIter>
+where
+    As: IntoIterator<Item = A>,
+{
+    xs.into_iter().skip(1)
 }
 
 #[inline(always)]
-pub fn init<A>(xs: impl IntoIterator<Item = A>) -> impl Iterator<Item = A> {
-    let mut xs = xs.into_iter();
-    let mut prev = xs.next();
+pub fn init<A, As>(xs: As) -> std::iter::FromFn<impl FnMut() -> Option<A>>
+where
+    As: IntoIterator<Item = A>,
+{
+    let mut iter = xs.into_iter().peekable();
 
     std::iter::from_fn(move || {
-        if let Some(next) = xs.next() {
-            let result = prev.take();
-            prev = Some(next);
-            result
+        let next = iter.next();
+        if iter.peek().is_some() {
+            next
         } else {
             None
         }
@@ -162,10 +198,10 @@ pub fn length<A>(xs: impl IntoIterator<Item = A>) -> usize {
     xs.into_iter().count()
 }
 
-#[inline(always)]
-pub fn reverse<A>(xs: impl DoubleEndedIterator<Item = A>) -> Vec<A> {
-    xs.rev().collect()
-}
+// #[inline(always)]
+// pub fn reverse<A>(xs: impl DoubleEndedIterator<Item = A>) -> Vec<A> {
+//     xs.rev().collect()
+// }
 
 // todo Io
 
@@ -191,6 +227,13 @@ mod tests {
 
         assert_eq!(foldl(|acc, x| acc + x, 0, vec![1, 2, 3, 4, 5]), 15);
     }
+
+    // #[test]
+    // fn test_foldr() {
+    //     assert_eq!(foldr(|x, acc| acc + x, 0, Vec::<i32>::new()), 0);
+
+    //     assert_eq!(foldr(|x, acc| acc + x, 0, vec![1, 2, 3, 4, 5]), 15);
+    // }
 
     #[test]
     fn test_elem() {
@@ -342,10 +385,10 @@ mod tests {
         assert_eq!(length(vec![1, 2, 3]), 3);
     }
 
-    #[test]
-    fn test_reverse() {
-        assert_eq!(reverse(Vec::<i32>::new().into_iter()), Vec::<i32>::new());
+    // #[test]
+    // fn test_reverse() {
+    //     assert_eq!(reverse(Vec::<i32>::new().into_iter()), Vec::<i32>::new());
 
-        assert_eq!(reverse(vec![1, 2, 3].into_iter()), vec![3, 2, 1]);
-    }
+    //     assert_eq!(reverse(vec![1, 2, 3].into_iter()), vec![3, 2, 1]);
+    // }
 }
