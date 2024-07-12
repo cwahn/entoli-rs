@@ -19,3 +19,12 @@
 //         self.map(f).unwrap_or_else(default)
 //     }
 // }
+
+
+trait SomeTrait{
+    type AccType : SomeTrait;
+}
+
+impl SomeTrait for i32{
+    type AccType = impl SomeTrait<AccType = i32>;
+}
