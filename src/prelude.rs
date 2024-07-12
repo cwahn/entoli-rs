@@ -273,6 +273,53 @@ where
 
 // todo scanr, scanr1
 
+// Infinite lists
+
+//  iterate, repeat, replicate, cycle
+
+pub fn iterate<A, F>(f: F, a: A) -> std::iter::FromFn<impl FnMut() -> Option<A>>
+where
+    F: Fn(A) -> A,
+    A: Clone,
+{
+    let mut acc = Some(a);
+    std::iter::from_fn(move || {
+        let a = acc.take()?;
+        acc = Some(f(a.clone()));
+        Some(a)
+    })
+}
+
+pub fn repeat<A>(a: A) -> std::iter::FromFn<impl FnMut() -> Option<A>>
+where
+    A: Clone,
+{
+    std::iter::from_fn(move || Some(a.clone()))
+}
+
+pub fn replicate<A>(n: usize, a: A) -> std::iter::FromFn<impl FnMut() -> Option<A>>
+where
+    A: Clone,
+{
+    let mut i = 0;
+    std::iter::from_fn(move || {
+        if i < n {
+            i += 1;
+            Some(a.clone())
+        } else {
+            None
+        }
+    })
+}
+
+pub fn cycle<As>(xs: As) -> std::iter::Cycle<<As as IntoIterator>::IntoIter>
+where
+    As: IntoIterator,
+    <As as IntoIterator>::IntoIter: Clone,
+{
+    xs.into_iter().cycle()
+}
+
 // todo Io
 
 #[cfg(test)]
@@ -519,6 +566,34 @@ mod tests {
         assert_eq!(
             scanl1(|acc, x| acc + x, vec![1, 2, 3, 4, 5]).collect::<Vec<_>>(),
             vec![1, 3, 6, 10, 15]
+        );
+    }
+
+    // Infinite lists
+
+    #[test]
+    fn test_iterate() {
+        assert_eq!(
+            iterate(|x| x + 1, 0).take(5).collect::<Vec<_>>(),
+            vec![0, 1, 2, 3, 4]
+        );
+    }
+
+    #[test]
+    fn test_repeat() {
+        assert_eq!(repeat(1).take(5).collect::<Vec<_>>(), vec![1, 1, 1, 1, 1]);
+    }
+
+    #[test]
+    fn test_replicate() {
+        assert_eq!(replicate(5, 1).collect::<Vec<_>>(), vec![1, 1, 1, 1, 1]);
+    }
+
+    #[test]
+    fn test_cycle() {
+        assert_eq!(
+            cycle(vec![1, 2, 3]).take(7).collect::<Vec<_>>(),
+            vec![1, 2, 3, 1, 2, 3, 1]
         );
     }
 }
