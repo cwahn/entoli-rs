@@ -226,6 +226,53 @@ where
     xs.into_iter().flat_map(f)
 }
 
+// Building lists
+
+pub fn scanl<A, B, F>(
+    f: F,
+    init: B,
+    xs: impl IntoIterator<Item = A>,
+) -> std::iter::FromFn<impl FnMut() -> Option<B>>
+where
+    F: Fn(&B, A) -> B,
+    B: Clone,
+{
+    let mut acc = Some(init.clone());
+    let mut iter = xs.into_iter();
+
+    std::iter::from_fn(move || {
+        if let Some(b) = acc.take() {
+            acc = iter.next().map(|x| f(&b, x));
+            Some(b)
+        } else {
+            None
+        }
+    })
+}
+
+pub fn scanl1<A, F>(
+    f: F,
+    xs: impl IntoIterator<Item = A>,
+) -> std::iter::FromFn<impl FnMut() -> Option<A>>
+where
+    F: Fn(&A, A) -> A,
+    A: Clone,
+{
+    let mut iter = xs.into_iter();
+    let mut acc = iter.next();
+
+    std::iter::from_fn(move || {
+        if let Some(b) = acc.take() {
+            acc = iter.next().map(|x| f(&b, x));
+            Some(b)
+        } else {
+            None
+        }
+    })
+}
+
+// todo scanr, scanr1
+
 // todo Io
 
 #[cfg(test)]
@@ -437,6 +484,34 @@ mod tests {
         assert_eq!(
             concat_map(|x| vec![x, x], vec![1, 2, 3]).collect::<Vec<_>>(),
             vec![1, 1, 2, 2, 3, 3]
+        );
+    }
+
+    // Building lists
+
+    #[test]
+    fn test_scanl() {
+        assert_eq!(
+            scanl(|acc, x| acc + x, 0, Vec::<i32>::new()).collect::<Vec<_>>(),
+            vec![0]
+        );
+
+        assert_eq!(
+            scanl(|acc, x| acc + x, 0, vec![1, 2, 3, 4, 5]).collect::<Vec<_>>(),
+            vec![0, 1, 3, 6, 10, 15]
+        );
+    }
+
+    #[test]
+    fn test_scanl1() {
+        assert_eq!(
+            scanl1(|acc, x| acc + x, Vec::<i32>::new()).collect::<Vec<_>>(),
+            Vec::new()
+        );
+
+        assert_eq!(
+            scanl1(|acc, x| acc + x, vec![1, 2, 3, 4, 5]).collect::<Vec<_>>(),
+            vec![1, 3, 6, 10, 15]
         );
     }
 }
