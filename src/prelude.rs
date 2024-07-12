@@ -393,6 +393,53 @@ where
 
 // No break since it is a keyword
 
+// Zipping and unzipping lists
+
+#[inline(always)]
+pub fn zip<A, B, As, Bs>(
+    xs: As,
+    ys: Bs,
+) -> std::iter::Zip<<As as IntoIterator>::IntoIter, <Bs as IntoIterator>::IntoIter>
+where
+    As: IntoIterator<Item = A>,
+    Bs: IntoIterator<Item = B>,
+{
+    xs.into_iter().zip(ys)
+}
+
+#[inline(always)]
+pub fn zip_with<A, B, C, As, Bs, F>(
+    f: F,
+    xs: As,
+    ys: Bs,
+) -> std::iter::Map<
+    std::iter::Zip<<As as IntoIterator>::IntoIter, <Bs as IntoIterator>::IntoIter>,
+    impl FnMut((A, B)) -> C,
+>
+where
+    As: IntoIterator<Item = A>,
+    Bs: IntoIterator<Item = B>,
+    F: Fn(A, B) -> C,
+{
+    xs.into_iter().zip(ys).map(move |(a, b)| f(a, b))
+}
+
+pub fn unzip<A, B, FromA, FromB>(xs: impl IntoIterator<Item = (A, B)>) -> (FromA, FromB)
+where
+    FromA: Default + Extend<A>,
+    FromB: Default + Extend<B>,
+{
+    let mut as_ = FromA::default();
+    let mut bs = FromB::default();
+
+    for (a, b) in xs {
+        as_.extend(Some(a));
+        bs.extend(Some(b));
+    }
+
+    (as_, bs)
+}
+
 // todo Io
 
 #[cfg(test)]
@@ -726,6 +773,30 @@ mod tests {
 
         assert_eq!(xs.collect::<Vec<_>>(), vec![1, 2]);
         assert_eq!(ys.collect::<Vec<_>>(), vec![3, 4, 5]);
+    }
+
+    #[test]
+    fn test_zip() {
+        assert_eq!(
+            zip(vec![1, 2, 3], vec![4, 5, 6]).collect::<Vec<_>>(),
+            vec![(1, 4), (2, 5), (3, 6)]
+        );
+    }
+
+    #[test]
+    fn test_zip_with() {
+        assert_eq!(
+            zip_with(|x, y| x + y, vec![1, 2, 3], vec![4, 5, 6]).collect::<Vec<_>>(),
+            vec![5, 7, 9]
+        );
+    }
+
+    #[test]
+    fn test_unzip() {
+        let (xs, ys): (Vec<_>, Vec<_>) = unzip(vec![(1, 4), (2, 5), (3, 6)]);
+
+        assert_eq!(xs, vec![1, 2, 3]);
+        assert_eq!(ys, vec![4, 5, 6]);
     }
 
     // No break since it is a keyword
