@@ -492,13 +492,20 @@ mod tests {
     #[test]
     fn test_scanl() {
         assert_eq!(
-            scanl(|acc, x| acc + x, 0, Vec::<i32>::new()).collect::<Vec<_>>(),
-            vec![0]
+            scanl(|acc, x| *acc && (x % 2 == 0), true, Vec::<i32>::new()).collect::<Vec<_>>(),
+            vec![true]
         );
 
         assert_eq!(
-            scanl(|acc, x| acc + x, 0, vec![1, 2, 3, 4, 5]).collect::<Vec<_>>(),
-            vec![0, 1, 3, 6, 10, 15]
+            // Take until value is all even
+            scanl(|acc, x| *acc && (x % 2 == 0), true, vec![0, 2, 4, 5, 7]).collect::<Vec<_>>(),
+            vec![
+                true, true,  // 0
+                true,  // 0 && 2
+                true,  // 0 && 2 && 4
+                false, // 0 && 2 && 4 && 5
+                false, // 0 && 2 && 4 && 5 && 7
+            ]
         );
     }
 
