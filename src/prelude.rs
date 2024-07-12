@@ -198,10 +198,33 @@ pub fn length<A>(xs: impl IntoIterator<Item = A>) -> usize {
     xs.into_iter().count()
 }
 
+// todo reverse
 // #[inline(always)]
 // pub fn reverse<A>(xs: impl DoubleEndedIterator<Item = A>) -> Vec<A> {
 //     xs.rev().collect()
 // }
+
+#[inline(always)]
+pub fn concat<A, As>(xss: As) -> std::iter::Flatten<<As as IntoIterator>::IntoIter>
+where
+    As: IntoIterator,
+    As::Item: IntoIterator<Item = A>,
+{
+    xss.into_iter().flatten()
+}
+
+#[inline(always)]
+pub fn concat_map<A, As, Bs, F>(
+    f: F,
+    xs: As,
+) -> std::iter::FlatMap<<As as IntoIterator>::IntoIter, Bs, F>
+where
+    As: IntoIterator<Item = A>,
+    Bs: IntoIterator,
+    F: Fn(A) -> Bs,
+{
+    xs.into_iter().flat_map(f)
+}
 
 // todo Io
 
@@ -391,4 +414,29 @@ mod tests {
 
     //     assert_eq!(reverse(vec![1, 2, 3].into_iter()), vec![3, 2, 1]);
     // }
+
+    #[test]
+    fn test_concat() {
+        assert_eq!(
+            concat(Vec::<Vec<i32>>::new()).collect::<Vec<_>>(),
+            Vec::<i32>::new()
+        );
+
+        assert_eq!(
+            concat(vec![vec![1, 2], vec![3, 4]]).collect::<Vec<_>>(),
+            vec![1, 2, 3, 4]
+        );
+    }
+
+    #[test]
+    fn test_concat_map() {
+        assert_eq!(
+            concat_map(|x| vec![x, x], Vec::<i32>::new()).collect::<Vec<_>>(),
+            Vec::new()
+        );
+        assert_eq!(
+            concat_map(|x| vec![x, x], vec![1, 2, 3]).collect::<Vec<_>>(),
+            vec![1, 1, 2, 2, 3, 3]
+        );
+    }
 }
