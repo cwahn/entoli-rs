@@ -107,8 +107,8 @@ where
 pub fn append<A>(
     xs: impl IntoIterator<Item = A>,
     ys: impl IntoIterator<Item = A>,
-) -> std::iter::Chain<impl IntoIterator<Item = A>, impl IntoIterator<Item = A>> {
-    xs.into_iter().chain(ys)
+) -> impl IntoIterator<Item = A> {
+    xs.into_iter().chain(ys.into_iter())
 }
 
 #[inline(always)]
@@ -203,36 +203,53 @@ mod tests {
         assert_eq!(id(1), 1);
     }
 
-    #[test]
-    fn test_map_0() {
-        let xs = Vec::<i32>::new();
-        let ys: Vec<i32> = map(|x| x + 1, xs).collect();
+    // List operations
 
-        assert_eq!(ys, Vec::<i32>::new());
+    #[test]
+    fn test_map() {
+        assert_eq!(
+            map(|x| x + 1, Vec::<i32>::new()).collect::<Vec<_>>(),
+            Vec::new()
+        );
+
+        assert_eq!(
+            map(|x| x + 1, vec![1, 2, 3]).collect::<Vec<_>>(),
+            vec![2, 3, 4]
+        );
     }
 
     #[test]
-    fn test_map_1() {
-        let xs = vec![1, 2, 3];
-        let ys: Vec<i32> = map(|x| x + 1, xs).collect();
+    fn test_append() {
+        assert_eq!(
+            append(Vec::<i32>::new(), Vec::<i32>::new())
+                .into_iter()
+                .collect::<Vec<_>>(),
+            Vec::new()
+        );
 
-        assert_eq!(ys, vec![2, 3, 4]);
+        assert_eq!(
+            append(vec![1, 2, 3], vec![4, 5, 6])
+                .into_iter()
+                .collect::<Vec<_>>(),
+            vec![1, 2, 3, 4, 5, 6]
+        );
     }
 
     #[test]
-    fn test_filter_0() {
-        let xs = Vec::<i32>::new();
-        let ys: Vec<i32> = filter(|x| *x > 0, xs).collect();
+    fn test_filter() {
+        assert_eq!(
+            filter(|x| x > &0, Vec::<i32>::new()).collect::<Vec<_>>(),
+            Vec::new()
+        );
 
-        assert_eq!(ys, Vec::<i32>::new());
-    }
-
-    #[test]
-    fn test_filter_1() {
-        let xs = vec![1, -2, 3, -4, 5];
-        let ys: Vec<i32> = filter(|x| *x > 0, xs).collect();
-
-        assert_eq!(ys, vec![1, 3, 5]);
+        assert_eq!(
+            filter(|x| x > &0, vec![-1, -2, -3]).collect::<Vec<_>>(),
+            Vec::new()
+        );
+        assert_eq!(
+            filter(|x| x > &0, vec![-1, 2, -3]).collect::<Vec<_>>(),
+            vec![2]
+        );
     }
 
     #[test]
