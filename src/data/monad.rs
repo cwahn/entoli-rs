@@ -1,17 +1,25 @@
 // use super::applicative::Applicative;
+// use super::functor::Functor;
 
-// pub trait Monad: Applicative {
-//     fn and_then<B, F>(self, f: F) -> Self::Of<B>
-//     where
-//         F: Fn(Self::HktOf1) -> Self::Of<B>;
+use crate::base::hkt::Hkt1;
 
-//     fn then<B>(self, b: Self::Of<B>) -> Self::Of<B>
-//     where
-//         Self::Of<B>: Clone,
-//     {
-//         self.and_then(|_| b.clone())
-//     }
-// }
+use super::functor::Functor;
+
+pub trait Monad: Functor {
+    type Pure<A_>: Monad<HktArg1 = A_>;
+
+    type M<B_>: Monad<HktArg1 = B_>;
+
+    type Bind<B_, Mf_>: Monad<HktArg1 = B_>
+    where
+        Mf_: Fn(Self::HktArg1) -> Self::M<B_> + Clone;
+
+    fn pure<A>(a: A) -> Self::Pure<A>;
+
+    fn bind<B, Mf_>(self, mf: Mf_) -> Self::Bind<B, Mf_>
+    where
+        Mf_: Fn(Self::HktArg1) -> Self::M<B> + Clone;
+}
 
 // #[cfg(test)]
 // mod tests {

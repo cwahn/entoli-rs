@@ -109,7 +109,7 @@ impl<T> IntoIterator for Tree<T> {
 // Implement Hkt1 for Tree
 
 impl<T> Hkt1 for Tree<T> {
-    type HktOf1 = T;
+    type HktArg1 = T;
 
     // type Of<W1> = Tree<W1>;
 }

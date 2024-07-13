@@ -17,15 +17,15 @@ use crate::base::hkt::Hkt1;
 pub trait Functor: Hkt1 + Sized {
     type Map<B, F>: Functor
     where
-        F: Fn(Self::HktOf1) -> B + Clone;
+        F: Fn(Self::HktArg1) -> B + Clone;
 
     fn fmap<B, F>(self, f: F) -> Self::Map<B, F>
     where
-        F: Fn(Self::HktOf1) -> B + Clone;
+        F: Fn(Self::HktArg1) -> B + Clone;
 
-    fn fmap1<F>(self, f: F) -> Self::Map<Self::HktOf1, F>
+    fn fmap1<F>(self, f: F) -> Self::Map<Self::HktArg1, F>
     where
-        F: Fn(Self::HktOf1) -> Self::HktOf1 + Clone;
+        F: Fn(Self::HktArg1) -> Self::HktArg1 + Clone;
 }
 
 #[cfg(test)]
@@ -154,7 +154,7 @@ mod tests {
     // impl_hkt1!(std::vec::IntoIter);
 
     impl<A> Hkt1 for std::vec::IntoIter<A> {
-        type HktOf1 = A;
+        type HktArg1 = A;
     }
 
     impl<A> Functor for std::vec::IntoIter<A> {
@@ -200,7 +200,7 @@ mod tests {
     // }
 
     impl<A> Hkt1 for std::iter::Once<A> {
-        type HktOf1 = A;
+        type HktArg1 = A;
     }
 
     impl<A> Functor for std::iter::Once<A> {
@@ -256,7 +256,7 @@ mod tests {
         I: Iterator<Item = A>,
         F: Fn(A) -> B + Clone,
     {
-        type HktOf1 = B;
+        type HktArg1 = B;
     }
 
     impl<I, A, B, F> Functor for std::iter::Map<I, F>
@@ -266,12 +266,12 @@ mod tests {
     {
         type Map<C, G> = std::iter::Map<Self, G>
         where
-            G: Fn(Self::HktOf1) -> C + Clone;
+            G: Fn(Self::HktArg1) -> C + Clone;
 
         #[inline(always)]
         fn fmap<C, G>(self, g: G) -> std::iter::Map<Self, G>
         where
-            G: Fn(Self::HktOf1) -> C + Clone,
+            G: Fn(Self::HktArg1) -> C + Clone,
         {
             self.map(g)
         }
@@ -279,7 +279,7 @@ mod tests {
         #[inline(always)]
         fn fmap1<G>(self, g: G) -> std::iter::Map<Self, G>
         where
-            G: Fn(Self::HktOf1) -> Self::HktOf1 + Clone,
+            G: Fn(Self::HktArg1) -> Self::HktArg1 + Clone,
         {
             self.map(g)
         }
@@ -320,7 +320,7 @@ mod tests {
         U: Iterator<Item = B>,
         F: Fn(A) -> U + Clone,
     {
-        type HktOf1 = B;
+        type HktArg1 = B;
     }
 
     impl<A, B, I, U, F> Functor for std::iter::FlatMap<I, U, F>

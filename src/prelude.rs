@@ -9,10 +9,14 @@ use crate::{
 
 // Tuples
 
+/// O(1)
+/// Extract the first element of a tuple
 pub fn fst<A, B>((a, _): (A, B)) -> A {
     a
 }
 
+/// O(1)
+/// Extract the second element of a tuple
 pub fn snd<A, B>((_, b): (A, B)) -> B {
     b
 }
@@ -25,6 +29,9 @@ pub fn snd<A, B>((_, b): (A, B)) -> B {
 
 //  Folds and traversals
 
+/// O(n) Lazy
+///
+/// Left-associative fold of a structure.
 pub fn foldl<A, B, F>(f: F, acc: B, xs: impl IntoIterator<Item = A>) -> B
 where
     F: Fn(B, A) -> B,
@@ -32,14 +39,20 @@ where
     xs.into_iter().fold(acc, move |acc, a| f(acc, a))
 }
 
-// todo foldr
-// pub fn foldr<A, B, F>(f: F, acc: B, xs: impl DoubleEndedIterator<Item = A>) -> B
-// where
-//     F: Fn(A, B) -> B,
-// {
-//     xs.rev().fold(acc, move |acc, a| f(a, acc))
-// }
+pub fn foldr<A, B, F>(
+    f: F,
+    acc: B,
+    xs: impl IntoIterator<Item = A, IntoIter: DoubleEndedIterator<Item = A>>,
+) -> B
+where
+    F: Fn(A, B) -> B,
+{
+    xs.into_iter().rev().fold(acc, move |acc, a| f(a, acc))
+}
 
+/// O(n)
+/// Determines whether given element is in the iterable.
+/// Short-circuits on first match.
 pub fn elem<A>(x: A, xs: impl IntoIterator<Item = A>) -> bool
 where
     A: PartialEq,
@@ -49,6 +62,9 @@ where
 
 // maximum, minimum, sum, product, any, all
 
+/// O(n)
+/// The largest element of a non-empty structure.
+/// Returns None for empty structures.
 pub fn maximum<A>(xs: impl IntoIterator<Item = A>) -> Option<A>
 where
     A: Ord,
@@ -56,6 +72,9 @@ where
     xs.into_iter().max()
 }
 
+/// O(n)
+/// The smallest element of a non-empty structure.
+/// Returns None for empty structures.
 pub fn minimum<A>(xs: impl IntoIterator<Item = A>) -> Option<A>
 where
     A: Ord,
@@ -64,6 +83,11 @@ where
 }
 
 // todo Monid
+
+/// O(n) Lazy
+///
+/// The sum function computes the sum of the numbers of a structure.
+/// Returns 0 for empty structures.
 pub fn sum<A>(xs: impl IntoIterator<Item = A>) -> A
 where
     A: std::ops::Add<Output = A> + Default,
@@ -80,6 +104,9 @@ where
 //     xs.into_iter().fold(1 as A, |acc, a| acc * a)
 // }
 
+/// O(n)
+/// Determines whether any element of the structure satisfies the predicate.
+/// Short-circuits on first match.
 pub fn any<A, F>(f: F, xs: impl IntoIterator<Item = A>) -> bool
 where
     F: Fn(A) -> bool,
@@ -87,6 +114,9 @@ where
     xs.into_iter().any(|a| f(a))
 }
 
+/// O(n)
+/// Determines whether all elements of the structure satisfy the predicate.
+/// Short-circuits on first non-match.
 pub fn all<A, F>(f: F, xs: impl IntoIterator<Item = A>) -> bool
 where
     F: Fn(A) -> bool,
@@ -96,12 +126,19 @@ where
 
 // Miscellaneous functions
 
+/// O(1)
+/// The identity function.
+
+#[inline(always)]
 pub fn id<A>(a: A) -> A {
     a
 }
 
 // List operations
 
+/// O(n) Lazy
+///
+/// Map a function over all values in the iterable.
 #[inline(always)]
 pub fn map<A, As, B, F>(f: F, xs: As) -> std::iter::Map<<As as IntoIterator>::IntoIter, F>
 where
@@ -118,6 +155,11 @@ where
 //     xs.into_iter().chain(ys.into_iter())
 // }
 
+/// O(n) Lazy
+///
+/// Append two iterables.
+/// Consumes both iterables.
+#[inline(always)]
 pub fn append<A, As1, As2>(
     xs: As1,
     ys: As2,
@@ -137,6 +179,10 @@ where
 //     xs.into_iter().filter(f)
 // }
 
+/// O(n) Lazy
+///     
+/// Filter elements of a structure based on a predicate.
+
 #[inline(always)]
 pub fn filter<A, As, F>(f: F, xs: As) -> std::iter::Filter<<As as IntoIterator>::IntoIter, F>
 where
@@ -146,23 +192,27 @@ where
     xs.into_iter().filter(f)
 }
 
+/// O(1)
+///
+/// Extract the first element of a iterable, if it exists.
+/// Panics if the iterable is empty.
 #[inline(always)]
-pub fn head<A>(xs: impl IntoIterator<Item = A>) -> Option<A> {
-    xs.into_iter().next()
+pub fn head<A>(xs: impl IntoIterator<Item = A>) -> A {
+    xs.into_iter().next().unwrap()
 }
 
+/// O(n)
+///
+/// Extract the last element of a iterable, if it exists consuming the iterable.
+/// Panics if the iterable is empty.
 #[inline(always)]
-pub fn last<A>(xs: impl IntoIterator<Item = A>) -> Option<A> {
-    xs.into_iter().last()
+pub fn last<A>(xs: impl IntoIterator<Item = A>) -> A {
+    xs.into_iter().last().unwrap()
 }
 
-// #[inline(always)]
-// pub fn tail<A>(xs: impl IntoIterator<Item = A>) -> impl Iterator<Item = A> {
-//     let mut xs = xs.into_iter();
-//     xs.next();
-//     xs
-// }
-
+/// O(1) Lazy
+///     
+/// Extract the elements after the head of a iterable, if it exists.
 #[inline(always)]
 pub fn tail<A, As>(xs: As) -> std::iter::Skip<<As as IntoIterator>::IntoIter>
 where
@@ -171,6 +221,11 @@ where
     xs.into_iter().skip(1)
 }
 
+/// O(n) Lazy
+///
+/// Extract the elements before the last element of a iterable, if it exists.
+/// Consumes the iterable.
+/// Panics if the iterable is empty.
 #[inline(always)]
 pub fn init<A, As>(xs: As) -> std::iter::FromFn<impl FnMut() -> Option<A>>
 where
@@ -198,11 +253,10 @@ pub fn length<A>(xs: impl IntoIterator<Item = A>) -> usize {
     xs.into_iter().count()
 }
 
-// todo reverse
-// #[inline(always)]
-// pub fn reverse<A>(xs: impl DoubleEndedIterator<Item = A>) -> Vec<A> {
-//     xs.rev().collect()
-// }
+#[inline(always)]
+pub fn reverse<A>(xs: impl IntoIterator<Item = A, IntoIter: DoubleEndedIterator>) -> Vec<A> {
+    xs.into_iter().rev().collect()
+}
 
 #[inline(always)]
 pub fn concat<A, As>(xss: As) -> std::iter::Flatten<<As as IntoIterator>::IntoIter>
@@ -290,6 +344,7 @@ where
     })
 }
 
+#[inline(always)]
 pub fn repeat<A>(a: A) -> std::iter::FromFn<impl FnMut() -> Option<A>>
 where
     A: Clone,
@@ -312,6 +367,7 @@ where
     })
 }
 
+#[inline(always)]
 pub fn cycle<As>(xs: As) -> std::iter::Cycle<<As as IntoIterator>::IntoIter>
 where
     As: IntoIterator,
@@ -485,7 +541,113 @@ where
     result
 }
 
-// todo Io
+// Io is in crate::data::io
+
+// Additional functions
+
+pub fn filter_map<A, B, As, F>(
+    f: F,
+    xs: As,
+) -> std::iter::FilterMap<<As as IntoIterator>::IntoIter, F>
+where
+    As: IntoIterator<Item = A>,
+    F: Fn(A) -> Option<B>,
+{
+    xs.into_iter().filter_map(f)
+}
+
+pub fn find<A, F>(f: F, xs: impl IntoIterator<Item = A>) -> Option<A>
+where
+    F: Fn(&A) -> bool,
+{
+    xs.into_iter().find(f)
+}
+
+pub fn elem_index<A>(x: A, xs: impl IntoIterator<Item = A>) -> Option<usize>
+where
+    A: PartialEq,
+{
+    xs.into_iter().position(|a| a == x)
+}
+
+pub fn find_index<A, F>(f: F, xs: impl IntoIterator<Item = A>) -> Option<usize>
+where
+    F: Fn(&A) -> bool,
+{
+    xs.into_iter().position(|a| f(&a))
+}
+
+pub fn elem_indecies<A>(x: A, xs: impl IntoIterator<Item = A>) -> Vec<usize>
+where
+    A: PartialEq,
+{
+    xs.into_iter()
+        .enumerate()
+        .filter_map(|(i, a)| if a == x { Some(i) } else { None })
+        .collect()
+}
+
+pub fn find_indecies<A, F>(f: F, xs: impl IntoIterator<Item = A>) -> Vec<usize>
+where
+    F: Fn(&A) -> bool,
+{
+    xs.into_iter()
+        .enumerate()
+        .filter_map(|(i, a)| if f(&a) { Some(i) } else { None })
+        .collect()
+}
+
+// todo intersparse, intercallate
+
+pub fn sort<A: Ord, As: IntoIterator<Item = A>>(xs: As) -> Vec<A> {
+    let mut xs: Vec<A> = xs.into_iter().collect();
+    xs.sort();
+    xs
+}
+
+pub fn sort_on<A, B: Ord, As: IntoIterator<Item = A>, F>(f: F, xs: As) -> Vec<A>
+where
+    F: Fn(&A) -> B,
+{
+    let mut xs: Vec<A> = xs.into_iter().collect();
+    xs.sort_by_key(f);
+    xs
+}
+
+pub fn is_prefix_of<A>(prefix: impl IntoIterator<Item = A>, xs: impl IntoIterator<Item = A>) -> bool
+where
+    A: PartialEq,
+{
+    let mut prefix = prefix.into_iter();
+    let mut xs = xs.into_iter();
+
+    loop {
+        match (prefix.next(), xs.next()) {
+            (Some(a), Some(b)) if a == b => continue,
+            (None, _) => return true,
+            _ => return false,
+        }
+    }
+}
+
+pub fn is_suffix_of<A>(
+    suffix: impl IntoIterator<Item = A, IntoIter: DoubleEndedIterator<Item = A>>,
+    xs: impl IntoIterator<Item = A, IntoIter: DoubleEndedIterator<Item = A>>,
+) -> bool
+where
+    A: PartialEq,
+{
+    let mut suffix = suffix.into_iter().rev();
+    let mut xs = xs.into_iter().rev();
+
+    loop {
+        match (suffix.next(), xs.next()) {
+            (Some(a), Some(b)) if a == b => continue,
+            (None, _) => return true,
+            _ => return false,
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -510,12 +672,12 @@ mod tests {
         assert_eq!(foldl(|acc, x| acc + x, 0, vec![1, 2, 3, 4, 5]), 15);
     }
 
-    // #[test]
-    // fn test_foldr() {
-    //     assert_eq!(foldr(|x, acc| acc + x, 0, Vec::<i32>::new()), 0);
+    #[test]
+    fn test_foldr() {
+        assert_eq!(foldr(|x, acc| acc + x, 0, Vec::<i32>::new()), 0);
 
-    //     assert_eq!(foldr(|x, acc| acc + x, 0, vec![1, 2, 3, 4, 5]), 15);
-    // }
+        assert_eq!(foldr(|x, acc| acc + x, 0, vec![1, 2, 3, 4, 5]), 15);
+    }
 
     #[test]
     fn test_elem() {
@@ -627,16 +789,16 @@ mod tests {
 
     #[test]
     fn test_head() {
-        assert_eq!(head(Vec::<i32>::new()), None);
+        // assert_eq!(head(Vec::<i32>::new()), None);
 
-        assert_eq!(head(vec![1, 2, 3]), Some(1));
+        assert_eq!(head(vec![1, 2, 3]), 1);
     }
 
     #[test]
     fn test_last() {
-        assert_eq!(last(Vec::<i32>::new()), None);
+        // assert_eq!(last(Vec::<i32>::new()), None);
 
-        assert_eq!(last(vec![1, 2, 3]), Some(3));
+        assert_eq!(last(vec![1, 2, 3]), 3);
     }
 
     #[test]
@@ -667,12 +829,12 @@ mod tests {
         assert_eq!(length(vec![1, 2, 3]), 3);
     }
 
-    // #[test]
-    // fn test_reverse() {
-    //     assert_eq!(reverse(Vec::<i32>::new().into_iter()), Vec::<i32>::new());
+    #[test]
+    fn test_reverse() {
+        assert_eq!(reverse(Vec::<i32>::new()), Vec::<i32>::new());
 
-    //     assert_eq!(reverse(vec![1, 2, 3].into_iter()), vec![3, 2, 1]);
-    // }
+        assert_eq!(reverse(vec![1, 2, 3]), vec![3, 2, 1]);
+    }
 
     #[test]
     fn test_concat() {
@@ -851,6 +1013,16 @@ mod tests {
         assert_eq!(lines("").collect::<Vec<_>>(), Vec::<&str>::new());
 
         assert_eq!(lines("a\nb\nc").collect::<Vec<_>>(), vec!["a", "b", "c"]);
+
+        assert_eq!(
+            lines(&"".to_string()).collect::<Vec<_>>(),
+            Vec::<&str>::new()
+        );
+
+        assert_eq!(
+            lines(&"a\nb\nc".to_string()).collect::<Vec<_>>(),
+            vec!["a", "b", "c"]
+        );
     }
 
     #[test]
@@ -875,4 +1047,82 @@ mod tests {
     }
 
     // No break since it is a keyword
+
+    // Additional functions
+
+    #[test]
+    fn test_filter_map() {
+        assert_eq!(
+            filter_map(
+                |x| if x % 2 == 0 { Some(x) } else { None },
+                vec![1, 2, 3, 4, 5]
+            )
+            .collect::<Vec<_>>(),
+            vec![2, 4]
+        );
+    }
+
+    #[test]
+    fn test_find() {
+        assert_eq!(find(|x| *x == 1, vec![1, 2, 3]), Some(1));
+        assert_eq!(find(|x| *x == 1, vec![2, 3, 4]), None);
+    }
+
+    #[test]
+    fn test_elem_index() {
+        assert_eq!(elem_index(1, vec![1, 2, 3]), Some(0));
+        assert_eq!(elem_index(1, vec![2, 3, 4]), None);
+    }
+
+    #[test]
+    fn test_find_index() {
+        assert_eq!(find_index(|x| *x == 1, vec![1, 2, 3]), Some(0));
+        assert_eq!(find_index(|x| *x == 1, vec![2, 3, 4]), None);
+    }
+
+    #[test]
+    fn test_elem_indecies() {
+        assert_eq!(find_indecies(|x| *x == 1, vec![1, 2, 3]), vec![0]);
+        assert_eq!(
+            find_indecies(|x| *x == 1, vec![2, 3, 4]),
+            Vec::<usize>::new()
+        );
+    }
+
+    #[test]
+    fn test_find_indecies() {
+        assert_eq!(find_indecies(|x| *x == 1, vec![1, 2, 3]), vec![0]);
+        assert_eq!(
+            find_indecies(|x| *x == 1, vec![2, 3, 4]),
+            Vec::<usize>::new()
+        );
+    }
+
+    #[test]
+    fn test_sort() {
+        assert_eq!(sort(vec![3, 2, 1]), vec![1, 2, 3]);
+    }
+
+    #[test]
+    fn test_sort_on() {
+        assert_eq!(sort_on(|x| -x, vec![3, 2, 1]), vec![3, 2, 1]);
+    }
+
+    #[test]
+    fn test_is_prefix_of() {
+        assert_eq!(is_prefix_of(vec![1, 2], vec![1, 2, 3]), true);
+        assert_eq!(is_prefix_of(vec![1, 2], vec![1, 3, 4]), false);
+
+        assert_eq!(is_prefix_of("ab".chars(), "abc".chars()), true);
+        assert_eq!(is_prefix_of("ab".chars(), "acb".chars()), false);
+    }
+
+    #[test]
+    fn test_is_suffix_of() {
+        assert_eq!(is_suffix_of(vec![2, 3], vec![1, 2, 3]), true);
+        assert_eq!(is_suffix_of(vec![2, 3], vec![1, 3, 4]), false);
+
+        assert_eq!(is_suffix_of("bc".chars(), "abc".chars()), true);
+        assert_eq!(is_suffix_of("bc".chars(), "acb".chars()), false);
+    }
 }

@@ -5,7 +5,7 @@
 
 // //     fn apply<B, F>(self, f: Self::Of<F>) -> Self::Of<B>
 // //     where
-// //         F: Fn(Self::HktOf1) -> B;
+// //         F: Fn(Self::HktArg1) -> B;
 // // }
 
 // // #[cfg(test)]
@@ -22,7 +22,7 @@
 
 // //         fn apply<B, F>(self, f: Self::Of<F>) -> Self::Of<B>
 // //         where
-// //             F: Fn(Self::HktOf1) -> B,
+// //             F: Fn(Self::HktArg1) -> B,
 // //         {
 // //             match (self, f) {
 // //                 (Some(x), Some(f)) => Some(f(x)),
@@ -69,20 +69,20 @@
 // // }
 
 // pub trait Applicative: Functor {
-//     type Pure<T>: Applicative + Hkt1<HktOf1 = T>;
-//     type Af<B, F>: Applicative + Hkt1<HktOf1 = F>
+//     type Pure<T>: Applicative + Hkt1<HktArg1 = T>;
+//     type Af<B, F>: Applicative + Hkt1<HktArg1 = F>
 //     where
-//         F: Fn(Self::HktOf1) -> B + Clone;
+//         F: Fn(Self::HktArg1) -> B + Clone;
 
-//     type Ap<B, F>: Applicative + Hkt1<HktOf1 = B>
+//     type Ap<B, F>: Applicative + Hkt1<HktArg1 = B>
 //     where
-//         F: Fn(Self::HktOf1) -> B + Clone;
+//         F: Fn(Self::HktArg1) -> B + Clone;
 
-//     fn pure(x: Self::HktOf1) -> Self::Pure<Self::HktOf1>;
+//     fn pure(x: Self::HktArg1) -> Self::Pure<Self::HktArg1>;
 
 //     fn apply<B, F>(self, af: Self::Af<B, F>) -> Self::Ap<B, F>
 //     where
-//         F: Fn(Self::HktOf1) -> B + Clone;
+//         F: Fn(Self::HktArg1) -> B + Clone;
 // }
 
 // #[cfg(test)]
@@ -225,7 +225,7 @@
 
 //     impl<A> Applicative for std::vec::IntoIter<A> {
 //         type Pure<T> = std::iter::Once<T>;
-//         type Af<B, F> = impl Applicative + Hkt1<HktOf1 = F> + Iterator<Item = F> + Clone
+//         type Af<B, F> = impl Applicative + Hkt1<HktArg1 = F> + Iterator<Item = F> + Clone
 //         where
 //             F: Fn(A) -> B + Clone;
 
@@ -233,7 +233,7 @@
 //         where
 //             F: Fn(A) -> B + Clone;
 
-//         fn pure(x: Self::HktOf1) -> Self::Pure<Self::HktOf1> {
+//         fn pure(x: Self::HktArg1) -> Self::Pure<Self::HktArg1> {
 //             std::iter::once(x)
 //         }
 
@@ -248,7 +248,7 @@
 
 //     impl<A> Applicative for std::iter::Once<A> {
 //         type Pure<T> = std::iter::Once<T>;
-//         type Af<B, F> = impl Applicative + Hkt1<HktOf1 = F> + Iterator<Item = F> + Clone
+//         type Af<B, F> = impl Applicative + Hkt1<HktArg1 = F> + Iterator<Item = F> + Clone
 //         where
 //             F: Fn(A) -> B + Clone;
 
@@ -256,7 +256,7 @@
 //         where
 //             F: Fn(A) -> B + Clone;
 
-//         fn pure(x: Self::HktOf1) -> Self::Pure<Self::HktOf1> {
+//         fn pure(x: Self::HktArg1) -> Self::Pure<Self::HktArg1> {
 //             std::iter::once(x)
 //         }
 
@@ -275,24 +275,24 @@
 //         F: Fn(A) -> B + Clone,
 //     {
 //         type Pure<T> = std::iter::Once<T>;
-//         type Af<C, G> = impl Applicative + Hkt1<HktOf1 = G> + Iterator<Item = G> + Clone
+//         type Af<C, G> = impl Applicative + Hkt1<HktArg1 = G> + Iterator<Item = G> + Clone
 //         where
-//             G: Fn(Self::HktOf1) -> C + Clone;
+//             G: Fn(Self::HktArg1) -> C + Clone;
 
 //         type Ap<C, G> = std::iter::FlatMap<Self, 
-//         std::iter::Map<Self::Af<C,G>, impl Fn(G) -> C + Clone>, impl Fn(Self::HktOf1) -> std::iter::Map<Self::Af<C,G>, impl Fn(G) -> C + Clone> + Clone>
+//         std::iter::Map<Self::Af<C,G>, impl Fn(G) -> C + Clone>, impl Fn(Self::HktArg1) -> std::iter::Map<Self::Af<C,G>, impl Fn(G) -> C + Clone> + Clone>
 //         where
-//             G: Fn(Self::HktOf1) -> C + Clone;
+//             G: Fn(Self::HktArg1) -> C + Clone;
 
-//         fn pure(x: Self::HktOf1) -> Self::Pure<Self::HktOf1> {
+//         fn pure(x: Self::HktArg1) -> Self::Pure<Self::HktArg1> {
 //             std::iter::once(x)
 //         }
 
 //         fn apply<C, G>(self, af: Self::Af<C, G>) -> Self::Ap<C, G>
 //         where
-//             G: Fn(Self::HktOf1) -> C + Clone,
+//             G: Fn(Self::HktArg1) -> C + Clone,
 //         {
-//             let g = |x: Self::HktOf1| af.clone().map(move |f| f(x));
+//             let g = |x: Self::HktArg1| af.clone().map(move |f| f(x));
 //             self.flat_map(g)
 //         }
 //     }
@@ -304,7 +304,7 @@
 //         F: Fn(A) -> U + Clone,
 //     {
 //         type Pure<T> = std::iter::Once<T>;
-//         type Af<C, G> = impl Applicative + Hkt1<HktOf1 = G> + Iterator<Item = G> + Clone
+//         type Af<C, G> = impl Applicative + Hkt1<HktArg1 = G> + Iterator<Item = G> + Clone
 //         where
 //             G: Fn(B) -> C + Clone;
 
@@ -312,12 +312,12 @@
 //         where
 //             G: Fn(B) -> C + Clone;
 
-//         fn pure(x: Self::HktOf1) -> Self::Pure<Self::HktOf1> {
+//         fn pure(x: Self::HktArg1) -> Self::Pure<Self::HktArg1> {
 //             std::iter::once(x)
 //         }
 
 //         fn apply<C, G>(self, af: Self::Af<C, G>) -> Self::Ap<C, G>
-//         where
+//         // where
 //             G: Fn(B) -> C + Clone,
 //         {
 //             let g = |x: B| af.clone().map(move |f| f(x));
