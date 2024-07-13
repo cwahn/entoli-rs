@@ -543,6 +543,47 @@ where
 
 // Io is in crate::data::io
 
+pub struct PutStr<'a>(&'a str);
+
+impl<'a> crate::data::io::Io for PutStr<'a> {
+    type Output = ();
+
+    fn run(self) {
+        print!("{}", self.0);
+    }
+}
+
+pub fn put_str(s: &str) -> PutStr {
+    PutStr(s)
+}
+
+pub struct PutStrLn<'a>(&'a str);
+
+impl<'a> crate::data::io::Io for PutStrLn<'a> {
+    type Output = ();
+
+    fn run(self) {
+        println!("{}", self.0);
+    }
+}
+
+pub fn put_str_ln(s: &str) -> PutStrLn {
+    PutStrLn(s)
+}
+
+#[allow(non_camel_case_types)]
+pub struct get_line;
+
+impl crate::data::io::Io for get_line {
+    type Output = String;
+
+    fn run(self) -> String {
+        let mut s = String::new();
+        std::io::stdin().read_line(&mut s).unwrap();
+        s
+    }
+}
+
 // Additional functions
 
 pub fn filter_map<A, B, As, F>(
