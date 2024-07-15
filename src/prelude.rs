@@ -47,7 +47,7 @@ pub fn foldr<A, B, F>(
 where
     F: Fn(A, B) -> B,
 {
-    xs.into_iter().rev().fold(acc, move |acc, a| f(a, acc))
+    xs.into_iter().rfold(acc, move |acc, a| f(a, acc))
 }
 
 /// O(n)
@@ -333,13 +333,14 @@ where
 
 pub fn iterate<A, F>(f: F, a: A) -> std::iter::FromFn<impl FnMut() -> Option<A>>
 where
-    F: Fn(A) -> A,
+    F: Fn(&A) -> A,
     A: Clone,
 {
     let mut acc = Some(a);
+
     std::iter::from_fn(move || {
         let a = acc.take()?;
-        acc = Some(f(a.clone()));
+        acc = Some(f(&a));
         Some(a)
     })
 }
@@ -541,11 +542,110 @@ where
     result
 }
 
-// Io is in crate::data::io
+// Io
 
-pub struct PutStr<'a>(&'a str);
+pub trait Io: Sized {
+    type Output;
 
-impl<'a> crate::data::io::Io for PutStr<'a> {
+    fn run(self) -> Self::Output;
+
+    fn map<B, F>(self, f: F) -> IoMap<Self, F>
+    where
+        F: FnOnce(Self::Output) -> B,
+    {
+        IoMap { io: self, f }
+    }
+
+    fn pure<T>(t: T) -> IoPure<T> {
+        IoPure { io: t }
+    }
+
+    fn and_then<B, F>(self, f: F) -> IoBind<Self, F>
+    where
+        F: FnOnce(Self::Output) -> B + Clone,
+    {
+        IoBind { io: self, f }
+    }
+
+    fn then<Mb>(self, mb: Mb) -> IoBind<Self, impl FnOnce(Self::Output) -> Mb + Clone>
+    where
+        Mb: Io + Clone,
+    {
+        IoBind {
+            io: self,
+            f: |_| mb,
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct IoMap<I, F> {
+    io: I,
+    f: F,
+}
+
+impl<A, F, B> Io for IoMap<A, F>
+where
+    A: Io,
+    F: FnOnce(A::Output) -> B,
+{
+    type Output = B;
+
+    fn run(self) -> Self::Output {
+        (self.f)(self.io.run())
+    }
+}
+
+#[derive(Clone)]
+pub struct IoPure<A> {
+    io: A,
+}
+
+impl<A> Io for IoPure<A> {
+    type Output = A;
+
+    fn run(self) -> Self::Output {
+        self.io
+    }
+}
+
+#[derive(Clone)]
+pub struct IoBind<A, F> {
+    io: A,
+    f: F,
+}
+
+impl<A, B, F> Io for IoBind<A, F>
+where
+    A: Io,
+    B: Io,
+    F: FnOnce(A::Output) -> B,
+{
+    type Output = B::Output;
+
+    fn run(self) -> Self::Output {
+        (self.f)(self.io.run()).run()
+    }
+}
+
+// pub struct PutStr<'a>(&'a str);
+
+// impl<'a> crate::prelude::Io for PutStr<'a> {
+//     type Output = ();
+
+//     fn run(self) {
+//         print!("{}", self.0);
+//     }
+// }
+
+// pub fn put_str(s: &str) -> PutStr {
+//     PutStr(s)
+// }
+
+#[derive(Clone)]
+pub struct PutStr(std::string::String);
+
+impl crate::prelude::Io for PutStr {
     type Output = ();
 
     fn run(self) {
@@ -553,13 +653,31 @@ impl<'a> crate::data::io::Io for PutStr<'a> {
     }
 }
 
-pub fn put_str(s: &str) -> PutStr {
-    PutStr(s)
+pub fn put_str<S>(s: S) -> PutStr
+where
+    S: Into<String>,
+{
+    PutStr(s.into())
 }
 
-pub struct PutStrLn<'a>(&'a str);
+// pub struct PutStrLn<'a>(&'a str);
 
-impl<'a> crate::data::io::Io for PutStrLn<'a> {
+// impl<'a> crate::prelude::Io for PutStrLn<'a> {
+//     type Output = ();
+
+//     fn run(self) {
+//         println!("{}", self.0);
+//     }
+// }
+
+// pub fn put_strln(s: &str) -> PutStrLn {
+//     PutStrLn(s)
+// }
+
+#[derive(Clone)]
+pub struct PutStrLn(std::string::String);
+
+impl crate::prelude::Io for PutStrLn {
     type Output = ();
 
     fn run(self) {
@@ -567,19 +685,35 @@ impl<'a> crate::data::io::Io for PutStrLn<'a> {
     }
 }
 
-pub fn put_str_ln(s: &str) -> PutStrLn {
-    PutStrLn(s)
+pub fn put_str_ln<S>(s: S) -> PutStrLn
+where
+    S: Into<String>,
+{
+    PutStrLn(s.into())
 }
 
+/// Get a line from standard input.
+/// The last newline character(/n or /r/n on Windows) will not returned as part of output.
 #[allow(non_camel_case_types)]
+#[derive(Clone)]
 pub struct get_line;
 
-impl crate::data::io::Io for get_line {
+impl crate::prelude::Io for get_line {
     type Output = String;
 
     fn run(self) -> String {
         let mut s = String::new();
         std::io::stdin().read_line(&mut s).unwrap();
+
+        // Check if the last character is a newline and remove it
+        if s.ends_with('\n') {
+            s.pop();
+        }
+        // Check for Windows-style newline (\r\n)
+        if s.ends_with('\r') {
+            s.pop();
+        }
+
         s
     }
 }
