@@ -9,7 +9,7 @@ license = "MIT"
 readme = "README.md"
 repository = "https://github.com/cwahn/entoli-rs.git"
 keywords = ["rust", "functional", "haskell", "prelude", "fp"]
-categories = ["algorithms", "data-structures", "functional-programming"]
+categories = ["algorithms", "data-structures"]
 
 [dependencies]
 num-traits = "0.2"
