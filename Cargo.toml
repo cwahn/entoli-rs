@@ -1,9 +1,20 @@
 [package]
+# name = "entoli"
+# version = "0.1.0"
+# edition = "2021"
 name = "entoli"
 version = "0.1.0"
+authors = ["Chanwoo Ahn <cwahn0904@gmail.com>"]
 edition = "2021"
+description = "A functional programming library inspired by haskell."
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+# repository = "https://github.com/yourusername/my_crate"
+keywords = ["rust", "functional programming", "haskell"]
+categories = ["category1", "category2"]
 
 [dependencies]
+num-traits = "0.2"
 chrono = "0.4"
 reqwest = { version = "0.11", features = ["blocking", "cookies"] }
 tungstenite = "0.15"

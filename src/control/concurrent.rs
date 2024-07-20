@@ -27,24 +27,24 @@ where
 
 #[derive(Clone)]
 pub struct DelayForIo {
-    delay: std::time::Duration,
+    duration: std::time::Duration,
 }
 
 impl Io for DelayForIo {
     type Output = ();
 
     fn run(self) -> Self::Output {
-        std::thread::sleep(self.delay);
+        std::thread::sleep(self.duration);
     }
 }
 
-pub fn delay_for(delay: std::time::Duration) -> DelayForIo {
-    DelayForIo { delay }
+pub fn delay_for(duration: std::time::Duration) -> DelayForIo {
+    DelayForIo { duration }
 }
 
 #[derive(Clone)]
 pub struct DelayUntilIo {
-    deadline: std::time::Instant,
+    instant: std::time::Instant,
 }
 
 impl Io for DelayUntilIo {
@@ -52,12 +52,12 @@ impl Io for DelayUntilIo {
 
     fn run(self) -> Self::Output {
         let now = std::time::Instant::now();
-        if now < self.deadline {
-            std::thread::sleep(self.deadline - now);
+        if now < self.instant {
+            std::thread::sleep(self.instant - now);
         }
     }
 }
 
-pub fn delay_until(deadline: std::time::Instant) -> DelayUntilIo {
-    DelayUntilIo { deadline }
+pub fn delay_until(instant: std::time::Instant) -> DelayUntilIo {
+    DelayUntilIo { instant }
 }

@@ -1,14 +1,15 @@
-
 // Tuples
 
 /// O(1)
 /// Extract the first element of a tuple
+#[inline(always)]
 pub fn fst<A, B>((a, _): (A, B)) -> A {
     a
 }
 
 /// O(1)
 /// Extract the second element of a tuple
+#[inline(always)]
 pub fn snd<A, B>((_, b): (A, B)) -> B {
     b
 }
@@ -24,6 +25,7 @@ pub fn snd<A, B>((_, b): (A, B)) -> B {
 /// O(n) Lazy
 ///
 /// Left-associative fold of a structure.
+#[inline(always)]
 pub fn foldl<A, B, F>(f: F, acc: B, xs: impl IntoIterator<Item = A>) -> B
 where
     F: Fn(B, A) -> B,
@@ -31,6 +33,7 @@ where
     xs.into_iter().fold(acc, move |acc, a| f(acc, a))
 }
 
+#[inline(always)]
 pub fn foldr<A, B, F>(
     f: F,
     acc: B,
@@ -45,6 +48,7 @@ where
 /// O(n)
 /// Determines whether given element is in the iterable.
 /// Short-circuits on first match.
+#[inline(always)]
 pub fn elem<A>(x: A, xs: impl IntoIterator<Item = A>) -> bool
 where
     A: PartialEq,
@@ -57,6 +61,7 @@ where
 /// O(n)
 /// The largest element of a non-empty structure.
 /// Returns None for empty structures.
+#[inline(always)]
 pub fn maximum<A>(xs: impl IntoIterator<Item = A>) -> Option<A>
 where
     A: Ord,
@@ -67,6 +72,7 @@ where
 /// O(n)
 /// The smallest element of a non-empty structure.
 /// Returns None for empty structures.
+#[inline(always)]
 pub fn minimum<A>(xs: impl IntoIterator<Item = A>) -> Option<A>
 where
     A: Ord,
@@ -80,25 +86,26 @@ where
 ///
 /// The sum function computes the sum of the numbers of a structure.
 /// Returns 0 for empty structures.
+#[inline(always)]
 pub fn sum<A>(xs: impl IntoIterator<Item = A>) -> A
 where
-    A: std::ops::Add<Output = A> + Default,
+    A: std::ops::Add<Output = A> + num_traits::Zero,
 {
-    xs.into_iter().fold(Default::default(), |acc, a| acc + a)
+    xs.into_iter().fold(A::zero(), |acc, a| acc + a)
 }
 
 // todo Monid
-// ! Need to implement unit for Monid with Mul
-// pub fn product<A>(xs: impl IntoIterator<Item = A>) -> A
-// where
-//     A: std::ops::Mul<Output = A> + Default,
-// {
-//     xs.into_iter().fold(1 as A, |acc, a| acc * a)
-// }
+pub fn product<A>(xs: impl IntoIterator<Item = A>) -> A
+where
+    A: std::ops::Mul<Output = A> + num_traits::One,
+{
+    xs.into_iter().fold(A::one(), |acc, a| acc * a)
+}
 
 /// O(n)
 /// Determines whether any element of the structure satisfies the predicate.
 /// Short-circuits on first match.
+#[inline(always)]
 pub fn any<A, F>(f: F, xs: impl IntoIterator<Item = A>) -> bool
 where
     F: Fn(A) -> bool,
@@ -109,6 +116,7 @@ where
 /// O(n)
 /// Determines whether all elements of the structure satisfy the predicate.
 /// Short-circuits on first non-match.
+#[inline(always)]
 pub fn all<A, F>(f: F, xs: impl IntoIterator<Item = A>) -> bool
 where
     F: Fn(A) -> bool,
@@ -140,13 +148,6 @@ where
     xs.into_iter().map(f)
 }
 
-// pub fn append<A>(
-//     xs: impl IntoIterator<Item = A>,
-//     ys: impl IntoIterator<Item = A>,
-// ) -> impl IntoIterator<Item = A> {
-//     xs.into_iter().chain(ys.into_iter())
-// }
-
 /// O(n) Lazy
 ///
 /// Append two iterables.
@@ -162,14 +163,6 @@ where
 {
     xs.into_iter().chain(ys.into_iter())
 }
-
-// #[inline(always)]
-// pub fn filter<A, F>(f: F, xs: impl IntoIterator<Item = A>) -> impl Iterator<Item = A>
-// where
-//     F: Fn(&A) -> bool,
-// {
-//     xs.into_iter().filter(f)
-// }
 
 /// O(n) Lazy
 ///     
@@ -620,20 +613,6 @@ where
     }
 }
 
-// pub struct PutStr<'a>(&'a str);
-
-// impl<'a> crate::prelude::Io for PutStr<'a> {
-//     type Output = ();
-
-//     fn run(self) {
-//         print!("{}", self.0);
-//     }
-// }
-
-// pub fn put_str(s: &str) -> PutStr {
-//     PutStr(s)
-// }
-
 #[derive(Clone)]
 pub struct PutStr(std::string::String);
 
@@ -651,20 +630,6 @@ where
 {
     PutStr(s.into())
 }
-
-// pub struct PutStrLn<'a>(&'a str);
-
-// impl<'a> crate::prelude::Io for PutStrLn<'a> {
-//     type Output = ();
-
-//     fn run(self) {
-//         println!("{}", self.0);
-//     }
-// }
-
-// pub fn put_strln(s: &str) -> PutStrLn {
-//     PutStrLn(s)
-// }
 
 #[derive(Clone)]
 pub struct PutStrLn(std::string::String);
@@ -875,12 +840,12 @@ mod tests {
         assert_eq!(sum(vec![1, 2, 3, 4, 5]), 15);
     }
 
-    // #[test]
-    // fn test_product() {
-    //     assert_eq!(product(Vec::<i32>::new()), 1);
+    #[test]
+    fn test_product() {
+        assert_eq!(product(Vec::<i32>::new()), 1);
 
-    //     assert_eq!(product(vec![1, 2, 3, 4, 5]), 120);
-    // }
+        assert_eq!(product(vec![1, 2, 3, 4, 5]), 120);
+    }
 
     #[test]
     fn test_any() {

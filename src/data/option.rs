@@ -1,21 +1,32 @@
-// pub trait HktOption {
-//     type Arg1;
+use crate::base::hkt::Hkt1;
+use crate::impl_hkt1;
 
-//     fn fmap_or_else<B, D, F>(self, default: &D, f: &F) -> B
-//     where
-//         D: FnOnce() -> B,
-//         F: FnOnce(Self::Arg1) -> B;
-// }
+use super::functor::Functor;
 
-// impl<A> HktOption for Option<A> {
-//     type Arg1 = A;
+impl_hkt1!(Option);
 
-//     #[inline(always)]
-//     fn fmap_or_else<B, D, F>(self, default: D, f: F) -> B
-//     where
-//         D: FnOnce() -> B,
-//         F: FnOnce(A) -> B,
-//     {
-//         self.map(f).unwrap_or_else(default)
-//     }
-// }
+impl<A> Functor for Option<A> {
+    type Map<B, F> = Option<B>
+    where
+        F: Fn(A) -> B + Clone;
+
+    #[inline(always)]
+    fn fmap<B, F>(self, f: F) -> Option<B>
+    where
+        F: Fn(A) -> B + Clone,
+    {
+        self.map(f)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    #[test]
+    fn test_option_functor() {
+        assert_eq!(None.fmap(|x: i32| x + 1), None);
+        assert_eq!(Some(1).fmap(|x: i32| x + 1), Some(2));
+    }
+}

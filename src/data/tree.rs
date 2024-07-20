@@ -1,4 +1,8 @@
-use crate::{base::hkt::Hkt1, base::misc::in_place, data::functor::Functor};
+use crate::{
+    base::{hkt::Hkt1, misc::in_place},
+    data::functor::Functor,
+    impl_hkt1,
+};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Tree<T> {
@@ -6,9 +10,10 @@ pub struct Tree<T> {
     pub children: Vec<Tree<T>>,
 }
 
-// unfold :: (b -> (a, [b])) -> b -> Tree a
-
 impl<T> Tree<T> {
+    /// Build a tree from a initial seed and a igniter function
+    ///
+    /// (b -> (a, [b])) -> b -> Tree a
     pub fn unfold<F, B>(f: &F, b: &B) -> Tree<T>
     where
         F: Fn(&B) -> (T, Vec<B>) + Clone,
@@ -18,6 +23,9 @@ impl<T> Tree<T> {
         Tree { value, children }
     }
 
+    /// Zip two trees together
+    ///
+    /// Tree a -> Tree b -> Tree (a, b)
     pub fn zip<B>(self, other: Tree<B>) -> Tree<(T, B)>
     where
         T: Clone,
@@ -41,12 +49,15 @@ impl<T> Tree<T> {
         TreeIter { stack: vec![self] }
     }
 
-    pub fn update<F: Fn(&mut T)>(&mut self, f_mut: &F) {
+    pub fn update<F>(&mut self, f_mut: &F)
+    where
+        F: Fn(&mut T) -> (),
+    {
         f_mut(&mut self.value);
         self.children.iter_mut().for_each(|c| c.update(f_mut));
     }
 
-    fn fmap_ref<B, F>(self, f: &F) -> Tree<B>
+    fn fmap_ref_f<B, F>(self, f: &F) -> Tree<B>
     where
         F: Fn(T) -> B + Clone,
     {
@@ -55,7 +66,7 @@ impl<T> Tree<T> {
             children: self
                 .children
                 .into_iter()
-                .map(|child| child.fmap_ref(f))
+                .map(|child| child.fmap_ref_f(f))
                 .collect(),
         }
     }
@@ -108,45 +119,22 @@ impl<T> IntoIterator for Tree<T> {
 
 // Implement Hkt1 for Tree
 
-impl<T> Hkt1 for Tree<T> {
-    type HktArg1 = T;
-
-    // type Of<W1> = Tree<W1>;
-}
-
-// impl<A> Functor<A> for Tree<A> {
-//     type Map<B, F> = Tree<B>
-//     where
-//         F: Fn(A) -> B + Clone;
-
-//     fn fmap<B, F>(self, f: F) -> Tree<B>
-//     where
-//         F: Fn(A) -> B + Clone,
-//     {
-//         self.fmap_ref(&f)
-//     }
-
-//     fn fmap1<F>(mut self, f: F) -> Self
-//     where
-//         F: Fn(A) -> A,
-//     {
-//         self.update(&in_place(f));
-//         self
-//     }
-// }
+impl_hkt1!(Tree);
 
 impl<T> Functor for Tree<T> {
     type Map<B, F> = Tree<B>
     where
         F: Fn(T) -> B + Clone;
 
+    #[inline(always)]
     fn fmap<B, F>(self, f: F) -> Tree<B>
     where
         F: Fn(T) -> B + Clone,
     {
-        self.fmap_ref(&f)
+        self.fmap_ref_f(&f)
     }
 
+    #[inline(always)]
     fn fmap1<F>(mut self, f: F) -> Self
     where
         F: Fn(T) -> T,

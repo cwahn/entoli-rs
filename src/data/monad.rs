@@ -1,24 +1,25 @@
 // use super::applicative::Applicative;
 // use super::functor::Functor;
 
+// use super::functor::Functor;
 
-use super::functor::Functor;
+// ! Not useful until the HKT family is implemented
 
-pub trait Monad: Functor {
-    type Pure<A_>: Monad<HktArg1 = A_>;
+// pub trait Monad: Functor {
+//     type Pure<A_>: Monad<HktArg1 = A_>;
 
-    type M<B_>: Monad<HktArg1 = B_>;
+//     type M<B_>: Monad<HktArg1 = B_>;
 
-    type Bind<B_, Mf_>: Monad<HktArg1 = B_>
-    where
-        Mf_: Fn(Self::HktArg1) -> Self::M<B_> + Clone;
+//     type Bind<B_, Mf_>: Monad<HktArg1 = B_>
+//     where
+//         Mf_: Fn(Self::HktArg1) -> Self::M<B_> + Clone;
 
-    fn pure<A>(a: A) -> Self::Pure<A>;
+//     fn pure<A>(a: A) -> Self::Pure<A>;
 
-    fn bind<B, Mf_>(self, mf: Mf_) -> Self::Bind<B, Mf_>
-    where
-        Mf_: Fn(Self::HktArg1) -> Self::M<B> + Clone;
-}
+//     fn bind<B, Mf_>(self, mf: Mf_) -> Self::Bind<B, Mf_>
+//     where
+//         Mf_: Fn(Self::HktArg1) -> Self::M<B> + Clone;
+// }
 
 // #[cfg(test)]
 // mod tests {

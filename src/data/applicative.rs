@@ -1,5 +1,7 @@
 // // use super::functor::Functor;
 
+// ! Not useful until the HKT family is implemented
+
 // // pub trait Applicative: Functor {
 // //     fn pure<A>(a: A) -> Self::Of<A>;
 

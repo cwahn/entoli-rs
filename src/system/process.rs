@@ -1,19 +1,6 @@
-// def call_command(command: str) -> Io[None]:
-//     def _inner() -> None:
-//         result = subprocess.run(command, shell=True)
-//         if result.returncode != 0:
-//             raise subprocess.CalledProcessError(result.returncode, command)
-
-//     return Io(_inner)
-
-use std::{
-    io::Write,
-    path::{PathBuf},
-};
+use std::{io::Write, path::PathBuf};
 
 use crate::prelude::Io;
-
-// createProcess :: CreateProcess -> IO (Maybe Handle, Maybe Handle, Maybe Handle, ProcessHandle)
 
 pub struct CreateProcess {
     cmd_spec: CmdSpec,
@@ -455,10 +442,6 @@ pub fn read_create_process_with_exit_code(
 pub fn show_command_for_user(exec: PathBuf, args: Vec<String>) -> String {
     format!("{} {}", exec.display(), args.join(" "))
 }
-
-// pub fn get_pid(process: std::process::Child) -> u32 {
-//     process.id()
-// }
 
 pub struct GetPid {
     process: std::process::Child,
