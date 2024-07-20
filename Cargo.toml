@@ -1,7 +1,7 @@
 [package]
 
 name = "entoli"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Chanwoo Ahn <cwahn0904@gmail.com>"]
 edition = "2021"
 description = "A functional programming library inspired by haskell."
@@ -16,9 +16,9 @@ num-traits = "0.2"
 chrono = "0.4"
 reqwest = { version = "0.11", optional = true, features = ["blocking", "cookies"] }
 tungstenite = { version = "0.15", optional = true }
-url = "2.2"
+url = { version = "2.2", optional = true }
 
 [features]
 default = []
-http = ["reqwest"]
-ws = ["tungstenite", "url"]
+http_client = ["reqwest"]
+websocket = ["tungstenite", "url"]
