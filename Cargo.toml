@@ -8,7 +8,7 @@ description = "A functional programming library inspired by haskell."
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/cwahn/entoli-rs.git"
-keywords = ["rust", "functional", "haskell", "fp", "data structures"]
+keywords = ["rust", "functional", "haskell", "prelude", "fp"]
 categories = ["algorithms", "data-structures", "functional-programming"]
 
 [dependencies]
