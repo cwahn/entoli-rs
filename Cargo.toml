@@ -1,7 +1,7 @@
 [package]
 
 name = "entoli"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Chanwoo Ahn <cwahn0904@gmail.com>"]
 edition = "2021"
 description = "A functional programming library inspired by haskell."
