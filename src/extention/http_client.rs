@@ -24,4 +24,3 @@ impl Io for HttpRequestIo {
 pub fn http_request(request: reqwest::blocking::RequestBuilder) -> HttpRequestIo {
     HttpRequestIo { request }
 }
-

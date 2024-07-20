@@ -279,7 +279,7 @@
 //         where
 //             G: Fn(Self::HktArg1) -> C + Clone;
 
-//         type Ap<C, G> = std::iter::FlatMap<Self, 
+//         type Ap<C, G> = std::iter::FlatMap<Self,
 //         std::iter::Map<Self::Af<C,G>, impl Fn(G) -> C + Clone>, impl Fn(Self::HktArg1) -> std::iter::Map<Self::Af<C,G>, impl Fn(G) -> C + Clone> + Clone>
 //         where
 //             G: Fn(Self::HktArg1) -> C + Clone;

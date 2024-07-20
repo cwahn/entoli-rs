@@ -1,5 +1,5 @@
 use entoli::prelude::Io;
-use entoli::prelude::{foldl, get_line, iterate, last, put_str_ln, scanl1, take};
+use entoli::prelude::{get_line, put_str_ln};
 
 pub fn fib(n: u32) -> u32 {
     match n {

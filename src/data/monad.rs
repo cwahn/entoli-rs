@@ -1,7 +1,6 @@
 // use super::applicative::Applicative;
 // use super::functor::Functor;
 
-use crate::base::hkt::Hkt1;
 
 use super::functor::Functor;
 

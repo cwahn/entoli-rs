@@ -1,11 +1,3 @@
-use crate::{
-    base::hkt::Hkt1,
-    data::{
-        functor::Functor,
-        // monad::Monad
-    },
-    impl_hkt1,
-};
 
 // Tuples
 
@@ -919,7 +911,7 @@ mod tests {
     fn test_map() {
         assert_eq!(
             map(|x| x + 1, Vec::<i32>::new()).collect::<Vec<_>>(),
-            Vec::new()
+            Vec::<i32>::new()
         );
 
         assert_eq!(
@@ -934,7 +926,7 @@ mod tests {
             append(Vec::<i32>::new(), Vec::<i32>::new())
                 .into_iter()
                 .collect::<Vec<_>>(),
-            Vec::new()
+            Vec::<i32>::new()
         );
 
         assert_eq!(
@@ -949,12 +941,12 @@ mod tests {
     fn test_filter() {
         assert_eq!(
             filter(|x| x > &0, Vec::<i32>::new()).collect::<Vec<_>>(),
-            Vec::new()
+            Vec::<i32>::new()
         );
 
         assert_eq!(
             filter(|x| x > &0, vec![-1, -2, -3]).collect::<Vec<_>>(),
-            Vec::new()
+            Vec::<i32>::new()
         );
         assert_eq!(
             filter(|x| x > &0, vec![-1, 2, -3]).collect::<Vec<_>>(),
@@ -978,14 +970,20 @@ mod tests {
 
     #[test]
     fn test_tail() {
-        assert_eq!(tail(Vec::<i32>::new()).collect::<Vec<_>>(), Vec::new());
+        assert_eq!(
+            tail(Vec::<i32>::new()).collect::<Vec<_>>(),
+            Vec::<i32>::new()
+        );
 
         assert_eq!(tail(vec![1, 2, 3]).collect::<Vec<_>>(), vec![2, 3]);
     }
 
     #[test]
     fn test_init() {
-        assert_eq!(init(Vec::<i32>::new()).collect::<Vec<_>>(), Vec::new());
+        assert_eq!(
+            init(Vec::<i32>::new()).collect::<Vec<_>>(),
+            Vec::<i32>::new()
+        );
 
         assert_eq!(init(vec![1, 2, 3]).collect::<Vec<_>>(), vec![1, 2]);
     }
@@ -1028,7 +1026,7 @@ mod tests {
     fn test_concat_map() {
         assert_eq!(
             concat_map(|x| vec![x, x], Vec::<i32>::new()).collect::<Vec<_>>(),
-            Vec::new()
+            Vec::<i32>::new()
         );
         assert_eq!(
             concat_map(|x| vec![x, x], vec![1, 2, 3]).collect::<Vec<_>>(),
@@ -1062,7 +1060,7 @@ mod tests {
     fn test_scanl1() {
         assert_eq!(
             scanl1(|acc, x| acc + x, Vec::<i32>::new()).collect::<Vec<_>>(),
-            Vec::new()
+            Vec::<i32>::new()
         );
 
         assert_eq!(
@@ -1103,14 +1101,20 @@ mod tests {
 
     #[test]
     fn test_take() {
-        assert_eq!(take(0, Vec::<i32>::new()).collect::<Vec<_>>(), Vec::new());
+        assert_eq!(
+            take(0, Vec::<i32>::new()).collect::<Vec<_>>(),
+            Vec::<i32>::new()
+        );
 
         assert_eq!(take(2, vec![1, 2, 3]).collect::<Vec<_>>(), vec![1, 2]);
     }
 
     #[test]
     fn test_drop() {
-        assert_eq!(drop(0, Vec::<i32>::new()).collect::<Vec<_>>(), Vec::new());
+        assert_eq!(
+            drop(0, Vec::<i32>::new()).collect::<Vec<_>>(),
+            Vec::<i32>::new()
+        );
 
         assert_eq!(drop(2, vec![1, 2, 3]).collect::<Vec<_>>(), vec![3]);
     }
@@ -1119,7 +1123,7 @@ mod tests {
     fn test_take_while() {
         assert_eq!(
             take_while(|x| x < &3, Vec::<i32>::new()).collect::<Vec<_>>(),
-            Vec::new()
+            Vec::<i32>::new()
         );
 
         assert_eq!(
@@ -1132,7 +1136,7 @@ mod tests {
     fn test_drop_while() {
         assert_eq!(
             drop_while(|x| x < &3, Vec::<i32>::new()).collect::<Vec<_>>(),
-            Vec::new()
+            Vec::<i32>::new()
         );
 
         assert_eq!(

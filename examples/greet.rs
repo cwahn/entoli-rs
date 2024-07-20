@@ -1,5 +1,5 @@
 use entoli::prelude::Io;
-use entoli::prelude::{get_line, put_str, put_str_ln};
+use entoli::prelude::{get_line, put_str_ln};
 
 fn main() {
     let main = put_str_ln("What is your name?")

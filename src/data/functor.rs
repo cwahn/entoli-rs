@@ -31,12 +31,12 @@ pub trait Functor: Hkt1 + Sized {
 #[cfg(test)]
 mod tests {
 
-    use std::iter;
+    
 
     use super::*;
     use crate::impl_hkt1;
     // ? Only needed for endo functor on family of types
-    use crate::base::hkt::HktIter;
+    
 
     // impl<A> Functor<A> for Option<A> {
     //     type Map<B, F> = Option<B>
@@ -359,11 +359,11 @@ mod tests {
     #[test]
     fn test_vec_into_iter_functor() {
         assert_eq!(
-            Vec::new()
+            Vec::<i32>::new()
                 .into_iter()
                 .fmap(&|x: i32| x + 1)
                 .collect::<Vec<_>>(),
-            Vec::new()
+            Vec::<i32>::new()
         );
 
         let v = vec![1, 2, 3];
@@ -377,7 +377,7 @@ mod tests {
     // fn test_iter_functor() {
     //     assert_eq!(
     //         [].iter().fmap(&|x: &i32| x + 1).collect::<Vec<_>>(),
-    //         Vec::new()
+    //         Vec::<i32>::new()
     //     );
 
     //     let v = vec![1, 2, 3];
@@ -386,17 +386,17 @@ mod tests {
 
     #[test]
     fn test_map_functor() {
-        // let it0 = Vec::new().into_iter();
+        // let it0 = Vec::<i32>::new().into_iter();
         fn f0(x: i32) -> i32 {
             x + 1
         }
 
         let f0_ = |x: i32| x + 1;
 
-        let map0 = Vec::new().into_iter().map(f0);
+        let map0 = Vec::<i32>::new().into_iter().map(f0);
         let map1 = vec![1, 2, 3].into_iter().map(f0_);
 
-        assert_eq!(map0.fmap(|x| x + 1).collect::<Vec<_>>(), Vec::new());
+        assert_eq!(map0.fmap(|x| x + 1).collect::<Vec<_>>(), Vec::<i32>::new());
         assert_eq!(map1.fmap(|x| x + 1).collect::<Vec<_>>(), vec![3, 4, 5]);
     }
 }

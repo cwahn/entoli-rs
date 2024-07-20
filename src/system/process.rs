@@ -8,7 +8,7 @@
 
 use std::{
     io::Write,
-    path::{Path, PathBuf},
+    path::{PathBuf},
 };
 
 use crate::prelude::Io;
