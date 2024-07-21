@@ -19,7 +19,8 @@ fn benchmark_in_place(c: &mut Criterion) {
     });
 
     c.bench_function("in_place (allocation)", |b| {
-        let f = |v: Vec<i32>| -> Vec<i32> { v.into_iter().map(|x| x * 2 + 3 - 1 * 5 / 2).collect() };
+        let f =
+            |v: Vec<i32>| -> Vec<i32> { v.into_iter().map(|x| x * 2 + 3 - 1 * 5 / 2).collect() };
         let mut data = large_vec.clone();
         let in_place_f = in_place(f);
 
@@ -30,7 +31,8 @@ fn benchmark_in_place(c: &mut Criterion) {
     });
 
     c.bench_function("non_in_place (allocation)", |b| {
-        let f = |v: Vec<i32>| -> Vec<i32> { v.into_iter().map(|x| x * 2 + 3 - 1 * 5 / 2).collect() };
+        let f =
+            |v: Vec<i32>| -> Vec<i32> { v.into_iter().map(|x| x * 2 + 3 - 1 * 5 / 2).collect() };
         let data = large_vec.clone();
 
         b.iter(|| {

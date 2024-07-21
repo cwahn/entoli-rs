@@ -110,7 +110,7 @@ pub fn any<A, F>(f: F, xs: impl IntoIterator<Item = A>) -> bool
 where
     F: Fn(A) -> bool,
 {
-    xs.into_iter().any(|a| f(a))
+    xs.into_iter().any(|x| f(x))
 }
 
 /// O(n)
@@ -121,7 +121,7 @@ pub fn all<A, F>(f: F, xs: impl IntoIterator<Item = A>) -> bool
 where
     F: Fn(A) -> bool,
 {
-    xs.into_iter().all(|a| f(a))
+    xs.into_iter().all(|x| f(x))
 }
 
 // Miscellaneous functions
@@ -228,19 +228,34 @@ where
     })
 }
 
+/// O(n)
+///
+/// Extract the nth element of a iterable, if it exists.
+///
+/// ! Panics if the iterable is too short.
 #[inline(always)]
-pub fn nth<A>(n: usize, xs: impl IntoIterator<Item = A>) -> Option<A> {
-    xs.into_iter().nth(n)
+pub fn nth<A>(n: usize, xs: impl IntoIterator<Item = A>) -> A {
+    xs.into_iter().nth(n).unwrap()
 }
 
+/// O(n)
+///     
+/// Returns the length of a finite iterable.
 #[inline(always)]
 pub fn length<A>(xs: impl IntoIterator<Item = A>) -> usize {
     xs.into_iter().count()
 }
 
+/// O(n)
+///     
+/// Reverse a iterable.
 #[inline(always)]
-pub fn reverse<A>(xs: impl IntoIterator<Item = A, IntoIter: DoubleEndedIterator>) -> Vec<A> {
-    xs.into_iter().rev().collect()
+pub fn reverse<As>(xs: As) -> std::iter::Rev<<As as IntoIterator>::IntoIter>
+where
+    As: IntoIterator,
+    <As as IntoIterator>::IntoIter: DoubleEndedIterator,
+{
+    xs.into_iter().rev()
 }
 
 #[inline(always)]
@@ -363,8 +378,6 @@ where
 }
 
 // Sublists
-
-// todo take, drop, split_at, take_while, drop_while, span
 
 #[inline(always)]
 pub fn take<A, As>(n: usize, xs: As) -> std::iter::Take<<As as IntoIterator>::IntoIter>
@@ -955,9 +968,9 @@ mod tests {
 
     #[test]
     fn test_nth() {
-        assert_eq!(nth(0, Vec::<i32>::new()), None);
+        // assert_eq!(nth(0, Vec::<i32>::new()).collect::<Vec<_>>(), None);
 
-        assert_eq!(nth(0, vec![1, 2, 3]), Some(1));
+        assert_eq!(nth(0, vec![1, 2, 3]), 1);
     }
 
     #[test]
@@ -969,9 +982,9 @@ mod tests {
 
     #[test]
     fn test_reverse() {
-        assert_eq!(reverse(Vec::<i32>::new()), Vec::<i32>::new());
+        assert_eq!(reverse(Vec::<i32>::new()).collect::<Vec<_>>(), Vec::<i32>::new());
 
-        assert_eq!(reverse(vec![1, 2, 3]), vec![3, 2, 1]);
+        assert_eq!(reverse(vec![1, 2, 3]).collect::<Vec<_>>(), vec![3, 2, 1]);
     }
 
     #[test]
