@@ -1,7 +1,7 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use entoli::base::misc::in_place;
 
-fn benchmark_in_place(c: &mut Criterion) {
+fn in_place_bench(c: &mut Criterion) {
     // Generate a large vector
     let large_vec: Vec<i32> = (0..10_000).collect();
 
@@ -76,5 +76,5 @@ fn benchmark_in_place(c: &mut Criterion) {
     });
 }
 
-criterion_group!(benches, benchmark_in_place);
+criterion_group!(benches, in_place_bench);
 criterion_main!(benches);
