@@ -26,10 +26,14 @@ websocket = ["tungstenite", "url"]
 [dev-dependencies]
 criterion = "0.3.5"
 
-[[bench]]
-name = "in_place_bench"
-harness = false
+# [[bench]]
+# name = "in_place_bench"
+# harness = false
+
+# [[bench]]
+# name = "from_fn_bench"
+# harness = false
 
 [[bench]]
-name = "from_fn_bench"
+name = "state_machine_bench"
 harness = false

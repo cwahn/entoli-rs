@@ -558,9 +558,9 @@ pub trait Io: Sized {
         IoPure { io: t }
     }
 
-    fn and_then<B, F>(self, f: F) -> IoBind<Self, F>
+    fn and_then<Mb, F>(self, f: F) -> IoBind<Self, F>
     where
-        F: FnOnce(Self::Output) -> B + Clone,
+        F: FnOnce(Self::Output) -> Mb + Clone,
     {
         IoBind { io: self, f }
     }
