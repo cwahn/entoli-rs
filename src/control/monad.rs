@@ -1,3 +1,5 @@
+use crate::base::misc::in_place;
+
 pub trait State: Sized {
     type S;
     type Output;
@@ -138,8 +140,11 @@ where
     type S = S;
     type Output = ();
 
-    fn run_state(self, s: Self::S) -> (Self::Output, Self::S) {
-        ((), (self.f)(s))
+    fn run_state(self, mut s: Self::S) -> (Self::Output, Self::S) {
+        unsafe {
+            std::ptr::write(&mut s, (self.f)(std::ptr::read(&s)));
+        }
+        ((), s)
     }
 }
 
@@ -148,13 +153,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_pure() {
+    fn test_state_pure() {
         let state = StatePure::<i32, i32>::pure(5);
         assert_eq!(state.run_state(0), (5, 0));
     }
 
     #[test]
-    fn test_map() {
+    fn test_state_map() {
         let state = StatePure::<i32, i32>::pure(5).map(|x| x * 2);
         assert_eq!(state.run_state(0), (10, 0));
     }
@@ -163,5 +168,34 @@ mod tests {
     fn test_state_and_then() {
         let state = StatePure::<i32, i32>::pure(5).and_then(|x| StatePure::pure(x * 2));
         assert_eq!(state.run_state(0), (10, 0));
+    }
+
+    #[test]
+    fn test_state_then() {
+        let state = StatePure::<i32, i32>::pure(5).then(StatePure::pure(10));
+        assert_eq!(state.run_state(0), (10, 0));
+    }
+
+    #[test]
+    fn test_state_get() {
+        let state = get::<i32> {
+            _phantom: std::marker::PhantomData,
+        };
+        assert_eq!(state.run_state(5), (5, 5));
+    }
+
+    #[test]
+    fn test_state_put() {
+        let state = StatePut { new_state: 10 };
+        assert_eq!(state.run_state(5), ((), 10));
+    }
+
+    #[test]
+    fn test_state_modify() {
+        let state = StateModify {
+            f: |x| x * 2,
+            _phantom: std::marker::PhantomData,
+        };
+        assert_eq!(state.run_state(5), ((), 10));
     }
 }

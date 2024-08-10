@@ -7,3 +7,4 @@ where
         std::ptr::write(x, f(std::ptr::read(x)));
     }
 }
+
